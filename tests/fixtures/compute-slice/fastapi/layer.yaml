@@ -1,0 +1,19 @@
+# app.module is a private input (seed), not a shared key — it derives app.start_command.
+# app.port republishes its input; app.start_command mixes an input ref and a sibling provide ref.
+apiVersion: initree.dev/v1
+id: fastapi
+slot: framework
+name: FastAPI service
+requires:
+  slots:
+    - { slot: language, one_of: [python] }
+consumes:
+  - { key: runtime.language, required: true }
+provides:
+  - { key: app.port, type: int, value: "${app.port}" }
+  - { key: app.start_command, type: string, value: "uvicorn ${app.module} --host 0.0.0.0 --port ${app.port}" }
+  - { key: app.healthcheck_path, type: string, value: "/health" }
+owns:
+  - "app/**"
+injects:
+  - { into: runtime.dependencies, format: toml-array, items: ["fastapi>=0.110"] }
