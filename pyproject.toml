@@ -36,6 +36,10 @@ src = ["src", "tests"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
+[tool.ruff.lint.flake8-bugbear]
+# typer.Option/Argument are sentinel factories, not mutable shared state — safe as arg defaults.
+extend-immutable-calls = ["typer.Option", "typer.Argument"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
