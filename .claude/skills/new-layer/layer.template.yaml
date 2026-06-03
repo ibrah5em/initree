@@ -1,0 +1,62 @@
+# layer.yaml — initree layer contract (annotated skeleton)
+# Fill every section. Delete the sections that genuinely do not apply to this layer.
+# Full schema: docs/01-layer-contract-and-lifecycle.md. Vocabulary: docs/03 + capability-registry skill.
+
+apiVersion: initree.dev/v1
+id: <layer-id>            # e.g. "fly-io"
+slot: <slot>              # language | framework | container | ci | deploy | notify
+name: <human name>
+description: <one line>
+
+# --- ordering / dependency ------------------------------------------------------------------------
+# Ordering is normally DERIVED from consumes -> provides edges. Use this only for ordering or pinning
+# that data flow does not already express (e.g. a framework that only supports one language).
+requires:
+  slots:
+    - { slot: <slot>, one_of: [<id>] }     # optional; restrict which layer may fill a required slot
+
+# --- context bus: keys this layer WRITES ----------------------------------------------------------
+# Only keys in THIS slot's namespace. Provide every MUST key for the slot (see capability-registry).
+# value may be a literal, a "${other.key}" template (engine-resolved), or ":hook".
+provides:
+  - { key: <namespace.key>, type: <string|int|bool|list|map|recipe>, value: <literal|"${...}"> }
+  # recipe example (a list of shell commands; {{...}} are deferred runtime tokens, ci renders them):
+  # - key: container.build_recipe
+  #   type: recipe
+  #   value:
+  #     - 'docker build -t {{IMAGE}} .'
+  #     - 'docker push {{IMAGE}}'
+
+# --- context bus: keys this layer READS -----------------------------------------------------------
+# Capability keys only — never tool-named keys.
+consumes:
+  - { key: <namespace.key>, required: true }
+  - { key: <namespace.key>, required: false, default: <value> }
+
+# --- user inputs (prompts) ------------------------------------------------------------------------
+# Backend-specific inputs go under <slot>.<id>.* and must NOT be consumed by other layers.
+inputs:
+  - { key: <namespace.key or slot.id.key>, prompt: "<question>", type: <type>, default: <value> }
+
+# --- files this layer OWNS (exclusive globs; must not overlap any other layer) --------------------
+owns:
+  - "<glob>"
+
+# --- injection points this layer EXPOSES in files it owns -----------------------------------------
+# The only way another layer may contribute to a file you own. Format-stable content only.
+injection_points:
+  - { id: <namespace.id>, file: <path>, format: <toml-array|yaml-seq|text-block|line>, anchor: <locator>, order: <alpha|declared|priority> }
+
+# --- fragments this layer INJECTS into points OTHER layers expose ---------------------------------
+# into must match an existing injection_points.id. Use for dependency lines / ignore entries, etc.
+injects:
+  - into: <injection_point.id>
+    format: <toml-array|yaml-seq|text-block|line>
+    items: [<string>, ...]        # for array/line formats
+    # template: |                 # for block/seq formats; may use ${context} (not raw CI syntax)
+    #   <fragment>
+
+# --- optional lifecycle hooks (escape hatch; most layers need none) -------------------------------
+hooks:
+  compute: <path>          # only if a provided value needs real computation beyond ${...}
+  finalize: <path>         # e.g. chmod +x, git init, go mod tidy, run a formatter

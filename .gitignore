@@ -1,0 +1,35 @@
+# initree / Environment & System
+.env
+.env.backup
+.DS_Store
+
+# IDEs & Editor Configs
+
+/.vscode/
+
+# Python & uv build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments (uv defaults to .venv)
+.venv/
+venv/
+env/
+
+# Packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Testing & Linting Cache (TDD)
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Logs
+*.log

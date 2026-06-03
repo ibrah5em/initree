@@ -1,0 +1,80 @@
+# initree capability registry — machine-readable mirror of v1
+# Reference data for the engine's resolve/validation. Mirror of docs/03-capability-registry-v1.md.
+# Keep this in sync with the doc on every change (docs/03 §16 versioning policy).
+version: 1
+
+# Each namespace is owned by exactly one slot. A layer may only provide keys in its slot's namespace.
+namespaces:
+  project:   { provider: engine }
+  git:       { provider: engine }
+  runtime:   { provider: language }
+  app:       { provider: framework }
+  container: { provider: container }
+  registry:  { provider: container }
+  ci:        { provider: ci }
+  deploy:    { provider: deploy }
+  notify:    { provider: notify }
+
+# conformance: MUST | SHOULD | MAY (for the owning slot). type: string|int|bool|list|map|recipe
+keys:
+  # engine-seeded
+  - { key: project.name, type: string, owner: engine, conformance: MUST }
+  - { key: project.slug, type: string, owner: engine, conformance: MUST }
+  - { key: project.dir,  type: string, owner: engine, conformance: MUST }
+  - { key: git.is_repo,  type: bool,   owner: engine, conformance: MUST }
+
+  # language
+  - { key: runtime.language,       type: string, owner: language, conformance: MUST }
+  - { key: runtime.version,        type: string, owner: language, conformance: MUST }
+  - { key: runtime.base_image,     type: string, owner: language, conformance: MUST }
+  - { key: runtime.install_cmd,    type: string, owner: language, conformance: MUST }
+  - { key: runtime.run_base_image, type: string, owner: language, conformance: MAY }
+  - { key: runtime.build_cmd,      type: string, owner: language, conformance: MAY }
+  - { key: runtime.artifact,       type: string, owner: language, conformance: MAY }
+
+  # framework
+  - { key: app.port,             type: int,    owner: framework, conformance: MUST }
+  - { key: app.start_command,    type: string, owner: framework, conformance: MUST }
+  - { key: app.healthcheck_path, type: string, owner: framework, conformance: SHOULD }
+
+  # container
+  - { key: container.runtime,       type: string, owner: container, conformance: MUST }
+  - { key: container.image_name,    type: string, owner: container, conformance: MUST }
+  - { key: container.exposed_port,  type: int,    owner: container, conformance: MUST }
+  - { key: container.build_recipe,  type: recipe, owner: container, conformance: MUST }
+  - { key: registry.host,            type: string, owner: container, conformance: SHOULD }
+  - { key: registry.image_name_base, type: string, owner: container, conformance: SHOULD }
+
+  # ci
+  - { key: ci.provider, type: string, owner: ci, conformance: MUST }
+
+  # deploy
+  - { key: deploy.target,       type: string, owner: deploy, conformance: MUST }
+  - { key: deploy.summary,      type: string, owner: deploy, conformance: MUST }
+  - { key: deploy.apply_recipe, type: recipe, owner: deploy, conformance: MUST }
+  - { key: deploy.url,          type: string, owner: deploy, conformance: SHOULD }
+
+  # notify (optional slot)
+  - { key: notify.send_recipe, type: recipe, owner: notify, conformance: MUST_IF_PRESENT }
+
+# Deferred runtime tokens, resolved ONLY by the ci slot at its render.
+recipe_tokens:
+  - { token: "{{IMAGE}}",            resolves_to: "${registry.image_name_base}:<native-short-sha>" }
+  - { token: "{{SHA}}",              resolves_to: "native short commit sha reference" }
+  - { token: "{{SECRET:purpose}}",      resolves_to: "native masked-variable reference" }
+  - { token: "{{SECRET_FILE:purpose}}", resolves_to: "native file-type-variable path" }
+
+# Logical secret purposes — the only secret vocabulary that crosses layers. Values never on the bus.
+secret_purposes:
+  - { purpose: registry,      note: "registry password/token (push)" }
+  - { purpose: registry_user, note: "registry username (push)" }
+  - { purpose: kubeconfig,    note: "cluster credentials (file) -> use {{SECRET_FILE:kubeconfig}}" }
+  - { purpose: slack_webhook, note: "slack incoming webhook url" }
+
+# Canonical injection points. id is shared vocabulary; format is owner-specific.
+injection_points:
+  - { id: runtime.dependencies, declared_by: language, formats: [toml-array, text-block, json-array] }
+  - { id: runtime.ignore,       declared_by: language, formats: [line] }
+
+# Reserved for future shared capabilities — do not use for private keys.
+reserved_namespaces: [db, cache, queue, observability, test, env, docs, secrets]
