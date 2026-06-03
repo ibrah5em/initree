@@ -1,0 +1,15 @@
+# Full-value language layer for compute tests (the trimmed valid-full fixtures omit values).
+# Exercises literal, sole-ref republish of an input, and a nested ref inside a larger string.
+apiVersion: initree.dev/v1
+id: python
+slot: language
+name: Python project base
+provides:
+  - { key: runtime.language, type: string, value: "python" }
+  - { key: runtime.version, type: string, value: "${runtime.version}" }
+  - { key: runtime.base_image, type: string, value: "python:${runtime.version}-slim" }
+  - { key: runtime.install_cmd, type: string, value: "uv sync --frozen" }
+owns:
+  - "pyproject.toml"
+injection_points:
+  - { id: runtime.dependencies, file: pyproject.toml, format: toml-array, anchor: "[project].dependencies", order: alpha }
