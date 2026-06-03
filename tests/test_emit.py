@@ -3,11 +3,12 @@
 The slice test runs the real pipeline (load -> resolve -> compute -> emit) over a fixture with full
 templates and proves both passes: every owned template is rendered against the frozen bus, and the
 two text-format injection points (text-block deps, alpha-ordered line ignores) are spliced into the
-owner's file. The rest are focused tests — toml-array and yaml-seq injection, the single-ownership
-guard, and one per rejection path (write outside owns, two writers, missing target, unimplemented
-format).
+owner's file. The rest are focused tests — toml-array, yaml-seq, and json-array injection, the
+single-ownership guard, and one per rejection path (write outside owns, two writers, missing
+target).
 """
 
+import json
 from pathlib import Path
 
 import pytest
@@ -19,7 +20,6 @@ from initree.emit import (
     InjectionError,
     OwnershipError,
     TemplateRenderError,
-    UnsupportedInjectionFormat,
     emit,
     render_text,
 )
@@ -276,8 +276,12 @@ def test_emit_rejects_injection_into_an_unrendered_file(tmp_path):
         emit([owner, web], ["owner", "web"], Bus({}), tmp_path / "out")
 
 
-def test_emit_rejects_an_unimplemented_injection_format(tmp_path):
-    src = _template(tmp_path / "node", "package.json", '{"name": "x", "keywords": []}\n')
+def test_emit_appends_to_a_json_array_in_alpha_order(tmp_path):
+    src = _template(
+        tmp_path / "node",
+        "package.json",
+        '{\n  "name": "${project.name}",\n  "keywords": ["scaffolded"]\n}\n',
+    )
     node = _layer(
         "node",
         "language",
@@ -288,6 +292,41 @@ def test_emit_rejects_an_unimplemented_injection_format(tmp_path):
                 file="package.json",
                 format="json-array",
                 anchor="keywords",
+                order="alpha",
+            )
+        ],
+        source_dir=src,
+    )
+    web = _layer(
+        "web",
+        "framework",
+        owns=["x/**"],
+        injects=[
+            Inject(into="runtime.dependencies", format="json-array", items=["fastify", "express"])
+        ],
+    )
+    out = tmp_path / "out"
+
+    emit([node, web], ["node", "web"], Bus({"project.name": "myapp"}), out)
+
+    doc = json.loads((out / "package.json").read_text())
+    assert doc["name"] == "myapp"
+    # the seed element is kept; injected units land sorted, not in declared order
+    assert doc["keywords"] == ["scaffolded", "express", "fastify"]
+
+
+def test_emit_rejects_a_json_anchor_that_is_not_an_array(tmp_path):
+    src = _template(tmp_path / "node", "package.json", '{\n  "name": "x"\n}\n')
+    node = _layer(
+        "node",
+        "language",
+        owns=["package.json"],
+        points=[
+            InjectionPoint(
+                id="runtime.dependencies",
+                file="package.json",
+                format="json-array",
+                anchor="name",
             )
         ],
         source_dir=src,
@@ -298,5 +337,5 @@ def test_emit_rejects_an_unimplemented_injection_format(tmp_path):
         owns=["x/**"],
         injects=[Inject(into="runtime.dependencies", format="json-array", items=["express"])],
     )
-    with pytest.raises(UnsupportedInjectionFormat):
+    with pytest.raises(InjectionError):
         emit([node, web], ["node", "web"], Bus({}), tmp_path / "out")

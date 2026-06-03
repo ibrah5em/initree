@@ -13,19 +13,21 @@ Two ordered passes over the frozen bus:
       topological order still lands correctly in an earlier owner's file — injection is order-free.
 
 Format strategies differ by where the anchor lives. A structured format (``toml-array``,
-``yaml-seq``) navigates a key path with a format-preserving parser and appends. A text format
-(``text-block``, ``line``) finds a marker region the template author placed —
+``yaml-seq``, ``json-array``) navigates a key path and appends to the array/sequence it finds;
+toml and yaml round-trip the surrounding formatting, json regenerates (it has no comments to keep).
+A text format (``text-block``, ``line``) finds a marker region the template author placed —
 ``>>> initree:inject <id>`` / ``<<< initree:inject <id>`` — and replaces its body, keying off the
 injection-point id the way the rendered proof in docs/01 §6 does.
 """
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Iterator, Mapping, MutableMapping
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Any
+from typing import Any, assert_never
 
 import tomlkit
 from ruamel.yaml import YAML
@@ -57,10 +59,6 @@ class TemplateRenderError(EmitError):
 
 class InjectionError(EmitError):
     """An injection target file is missing, or its anchor / marker region cannot be located."""
-
-
-class UnsupportedInjectionFormat(EmitError):
-    """An injection point declares a format emit does not implement yet."""
 
 
 def emit(layers: list[Layer], order: list[str], bus: Bus, out_dir: Path) -> list[Path]:
@@ -174,13 +172,12 @@ def _splice(file_path: Path, point: InjectionPoint, units: list[str]) -> None:
         _splice_toml_array(file_path, point, units)
     elif point.format == "yaml-seq":
         _splice_yaml_seq(file_path, point, units)
-    elif point.format in ("text-block", "line"):
+    elif point.format == "json-array":
+        _splice_json_array(file_path, point, units)
+    elif point.format == "text-block" or point.format == "line":
         _splice_markers(file_path, point, units)
     else:
-        raise UnsupportedInjectionFormat(
-            f"injection point '{point.id}' uses format '{point.format}', which emit does not "
-            "implement yet"
-        )
+        assert_never(point.format)
 
 
 def _splice_toml_array(file_path: Path, point: InjectionPoint, units: list[str]) -> None:
@@ -194,6 +191,37 @@ def _splice_toml_array(file_path: Path, point: InjectionPoint, units: list[str])
 def _navigate_toml(document: Any, point: InjectionPoint) -> Any:
     node = document
     for key in point.anchor.replace("[", "").replace("]", "").split("."):
+        try:
+            node = node[key]
+        except (KeyError, TypeError) as exc:
+            raise InjectionError(
+                f"injection point '{point.id}' anchor '{point.anchor}' is not a path in "
+                f"'{point.file}'"
+            ) from exc
+    return node
+
+
+def _splice_json_array(file_path: Path, point: InjectionPoint, units: list[str]) -> None:
+    """Append each unit as a string element to the JSON array at the anchor, then re-serialise.
+
+    The toml-array twin for JSON dependency files (e.g. package.json). JSON carries no comments, so
+    there is nothing to round-trip — the document is reparsed and dumped at the two-space indent
+    these files conventionally use. Units are appended as strings, the same as toml-array.
+    """
+    document = json.loads(file_path.read_text())
+    array = _navigate_json(document, point)
+    if not isinstance(array, list):
+        raise InjectionError(
+            f"injection point '{point.id}' anchor '{point.anchor}' is not an array in "
+            f"'{point.file}'"
+        )
+    array.extend(units)
+    file_path.write_text(json.dumps(document, indent=2) + "\n")
+
+
+def _navigate_json(document: Any, point: InjectionPoint) -> Any:
+    node = document
+    for key in point.anchor.split("."):
         try:
             node = node[key]
         except (KeyError, TypeError) as exc:
