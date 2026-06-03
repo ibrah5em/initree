@@ -1,0 +1,11 @@
+# Present and well-formed; the framework slot is what's missing from this recipe.
+apiVersion: initree.dev/v1
+id: lang
+slot: language
+name: Language base
+provides:
+  - { key: runtime.language, type: string }
+  - { key: runtime.base_image, type: string }
+  - { key: runtime.install_cmd, type: string }
+owns:
+  - "go.mod"

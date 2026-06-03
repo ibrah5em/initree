@@ -1,0 +1,13 @@
+# BROKEN (acyclicity): this container consumes a ci key while the ci layer consumes this
+# container's recipe -> container <-> ci cycle. The capability/recipe boundary exists precisely
+# to forbid a non-ci layer consuming a ci-runtime ref; violate it and resolve must reject.
+apiVersion: initree.dev/v1
+id: loop-container
+slot: container
+name: Container that wrongly consumes a ci key
+consumes:
+  - { key: ci.provider, required: true }
+provides:
+  - { key: container.build_recipe, type: recipe }
+owns:
+  - "Dockerfile"

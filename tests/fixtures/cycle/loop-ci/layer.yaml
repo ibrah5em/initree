@@ -1,0 +1,11 @@
+# BROKEN (acyclicity): the other half of the container <-> ci cycle.
+apiVersion: initree.dev/v1
+id: loop-ci
+slot: ci
+name: CI that consumes the container recipe
+consumes:
+  - { key: container.build_recipe, required: true }
+provides:
+  - { key: ci.provider, type: string }
+owns:
+  - ".gitlab-ci.yml"

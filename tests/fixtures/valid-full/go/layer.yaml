@@ -1,0 +1,19 @@
+# Trimmed to the fields resolve reads (slot, requires, provides keys, consumes, owns,
+# injection_points, injects). Values/templates are a compute/emit concern, omitted here.
+apiVersion: initree.dev/v1
+id: go
+slot: language
+name: Go module base
+provides:
+  - { key: runtime.language, type: string }
+  - { key: runtime.version, type: string }
+  - { key: runtime.base_image, type: string }
+  - { key: runtime.install_cmd, type: string }
+  - { key: runtime.run_base_image, type: string }
+  - { key: runtime.build_cmd, type: string }
+  - { key: runtime.artifact, type: string }
+owns:
+  - "go.mod"
+  - ".gitignore"
+injection_points:
+  - { id: runtime.dependencies, file: go.mod, format: text-block, anchor: "require-block", order: declared }

@@ -1,0 +1,15 @@
+apiVersion: initree.dev/v1
+id: k8s
+slot: deploy
+name: Deploy to Kubernetes
+consumes:
+  - { key: container.exposed_port, required: true }
+  - { key: container.image_name, required: true }
+  - { key: registry.image_name_base, required: true }
+provides:
+  - { key: deploy.target, type: string }
+  - { key: deploy.summary, type: string }
+  - { key: deploy.apply_recipe, type: recipe }
+  - { key: deploy.url, type: string }
+owns:
+  - "k8s/**"

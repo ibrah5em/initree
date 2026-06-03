@@ -1,0 +1,16 @@
+# BROKEN (missing provider): consumes container.* and registry.image_name_base, none of which
+# exist because there is no container layer in the recipe.
+apiVersion: initree.dev/v1
+id: deploy-vps
+slot: deploy
+name: Deploy over SSH
+consumes:
+  - { key: container.exposed_port, required: true }
+  - { key: container.image_name, required: true }
+  - { key: registry.image_name_base, required: true }
+provides:
+  - { key: deploy.target, type: string }
+  - { key: deploy.summary, type: string }
+  - { key: deploy.apply_recipe, type: recipe }
+owns:
+  - "deploy/deploy.sh"

@@ -1,0 +1,45 @@
+[project]
+name = "initree"
+version = "0.0.0"
+description = "A composition orchestrator for project scaffolding — compose layers, not templates."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.7",
+    "jinja2>=3.1",
+    "tomlkit>=0.12",
+    "ruamel.yaml>=0.18",
+    "typer>=0.12",
+]
+
+[project.scripts]
+initree = "initree.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.5",
+    "pyright>=1.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/initree"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"

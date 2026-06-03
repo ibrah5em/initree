@@ -1,0 +1,18 @@
+# BROKEN (dangling injection): injects into "runtime.ignore", which no layer in this recipe
+# declares as an injection point. resolve must reject naming the unmatched target.
+apiVersion: initree.dev/v1
+id: web
+slot: framework
+name: Web framework
+requires:
+  slots:
+    - { slot: language, one_of: [lang] }
+consumes:
+  - { key: runtime.language, required: true }
+provides:
+  - { key: app.port, type: int }
+  - { key: app.start_command, type: string }
+owns:
+  - "app/**"
+injects:
+  - { into: runtime.ignore, format: line, items: [".env"] }

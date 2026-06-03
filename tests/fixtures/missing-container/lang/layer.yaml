@@ -1,0 +1,15 @@
+# A realistic recipe that simply forgot the container slot. language + framework + deploy + ci
+# are all here and well-formed; nothing provides container.* / registry.image_name_base, so the
+# deploy and ci layers have required consumes with no provider. resolve must reject.
+apiVersion: initree.dev/v1
+id: lang
+slot: language
+name: Language base
+provides:
+  - { key: runtime.language, type: string }
+  - { key: runtime.version, type: string }
+  - { key: runtime.base_image, type: string }
+  - { key: runtime.install_cmd, type: string }
+owns:
+  - "go.mod"
+  - ".gitignore"

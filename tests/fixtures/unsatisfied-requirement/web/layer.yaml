@@ -1,0 +1,14 @@
+# BROKEN (unsatisfied requirement): requires a language slot filled by `go`, but this recipe
+# contains no language layer at all. resolve must reject on the requires.slots check.
+apiVersion: initree.dev/v1
+id: web
+slot: framework
+name: Web framework with no language present
+requires:
+  slots:
+    - { slot: language, one_of: [go] }
+provides:
+  - { key: app.port, type: int }
+  - { key: app.start_command, type: string }
+owns:
+  - "app/**"

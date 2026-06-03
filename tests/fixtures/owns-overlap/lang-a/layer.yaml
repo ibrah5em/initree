@@ -1,0 +1,13 @@
+# BROKEN (ownership): both layers in this recipe list ".gitignore" in `owns`. Single-ownership
+# is absolute, so resolve must reject before anything is written.
+apiVersion: initree.dev/v1
+id: lang-a
+slot: language
+name: Language that owns .gitignore
+provides:
+  - { key: runtime.language, type: string }
+  - { key: runtime.base_image, type: string }
+  - { key: runtime.install_cmd, type: string }
+owns:
+  - "go.mod"
+  - ".gitignore"

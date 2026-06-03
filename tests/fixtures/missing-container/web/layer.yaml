@@ -1,0 +1,14 @@
+apiVersion: initree.dev/v1
+id: web
+slot: framework
+name: Web framework
+requires:
+  slots:
+    - { slot: language, one_of: [lang] }
+consumes:
+  - { key: runtime.language, required: true }
+provides:
+  - { key: app.port, type: int }
+  - { key: app.start_command, type: string }
+owns:
+  - "app/**"

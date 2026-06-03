@@ -1,0 +1,10 @@
+# BROKEN (ownership): also claims ".gitignore" — collides with lang-a.
+apiVersion: initree.dev/v1
+id: container-b
+slot: container
+name: Container that also owns .gitignore
+provides:
+  - { key: container.image_name, type: string }
+owns:
+  - "Dockerfile"
+  - ".gitignore"

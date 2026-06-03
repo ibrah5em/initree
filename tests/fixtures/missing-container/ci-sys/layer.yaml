@@ -1,0 +1,13 @@
+# BROKEN (missing provider): consumes container.build_recipe, which no layer provides.
+apiVersion: initree.dev/v1
+id: ci-sys
+slot: ci
+name: CI pipeline
+consumes:
+  - { key: runtime.install_cmd, required: true }
+  - { key: container.build_recipe, required: true }
+  - { key: deploy.apply_recipe, required: true }
+provides:
+  - { key: ci.provider, type: string }
+owns:
+  - ".ci.yml"

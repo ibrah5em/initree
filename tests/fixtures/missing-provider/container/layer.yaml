@@ -1,0 +1,17 @@
+# BROKEN (missing provider): requires app.start_command and app.port, but no framework layer
+# provides the app.* contract in this recipe. resolve must reject naming the unprovided keys.
+apiVersion: initree.dev/v1
+id: container
+slot: container
+name: Container with no framework upstream
+consumes:
+  - { key: runtime.base_image, required: true }
+  - { key: runtime.install_cmd, required: true }
+  - { key: app.start_command, required: true }
+  - { key: app.port, required: true }
+provides:
+  - { key: container.image_name, type: string }
+  - { key: container.exposed_port, type: int }
+  - { key: container.build_recipe, type: recipe }
+owns:
+  - "Dockerfile"

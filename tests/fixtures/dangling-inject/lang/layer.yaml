@@ -1,0 +1,11 @@
+# Declares the runtime.dependencies injection point — but NOT the id the framework targets below.
+apiVersion: initree.dev/v1
+id: lang
+slot: language
+name: Language base
+provides:
+  - { key: runtime.language, type: string }
+owns:
+  - "go.mod"
+injection_points:
+  - { id: runtime.dependencies, file: go.mod, format: text-block, anchor: "require-block", order: declared }

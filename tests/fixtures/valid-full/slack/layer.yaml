@@ -1,0 +1,11 @@
+apiVersion: initree.dev/v1
+id: slack
+slot: notify
+name: Slack deploy notification
+consumes:
+  - { key: project.name, required: true }
+  - { key: deploy.summary, required: false, default: "a new version" }
+  - { key: deploy.url, required: false, default: "" }
+provides:
+  - { key: notify.send_recipe, type: recipe }
+owns: []
