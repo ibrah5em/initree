@@ -12,21 +12,24 @@ Two ordered passes over the frozen bus:
       at the anchor. This runs after every file is written, so a contributor that sorts later in
       topological order still lands correctly in an earlier owner's file — injection is order-free.
 
-Format strategies differ by where the anchor lives. A structured format (``toml-array``) navigates
-a key path with a format-preserving parser. A text format (``text-block``, ``line``) finds a marker
-region the template author placed — ``>>> initree:inject <id>`` / ``<<< initree:inject <id>`` — and
-replaces its body, keying off the injection-point id the way the rendered proof in docs/01 §6 does.
+Format strategies differ by where the anchor lives. A structured format (``toml-array``,
+``yaml-seq``) navigates a key path with a format-preserving parser and appends. A text format
+(``text-block``, ``line``) finds a marker region the template author placed —
+``>>> initree:inject <id>`` / ``<<< initree:inject <id>`` — and replaces its body, keying off the
+injection-point id the way the rendered proof in docs/01 §6 does.
 """
 
 from __future__ import annotations
 
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, MutableMapping
 from fnmatch import fnmatch
 from pathlib import Path
 from typing import Any
 
 import tomlkit
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedSeq
 
 from initree.context import Bus
 from initree.manifest import Inject, InjectionPoint, Layer
@@ -65,7 +68,7 @@ def emit(layers: list[Layer], order: list[str], bus: Bus, out_dir: Path) -> list
 
     Layers are walked in topological `order` for deterministic writes, but injection (4b) is
     independent of order by design. Raises an EmitError subclass on an ownership breach, an unknown
-    template reference, a missing injection target, or an unimplemented format.
+    template reference, or a missing injection target.
     """
     by_id = {layer.id: layer for layer in layers}
     out = Path(out_dir)
@@ -169,6 +172,8 @@ def _splice(file_path: Path, point: InjectionPoint, units: list[str]) -> None:
         )
     if point.format == "toml-array":
         _splice_toml_array(file_path, point, units)
+    elif point.format == "yaml-seq":
+        _splice_yaml_seq(file_path, point, units)
     elif point.format in ("text-block", "line"):
         _splice_markers(file_path, point, units)
     else:
@@ -197,6 +202,63 @@ def _navigate_toml(document: Any, point: InjectionPoint) -> Any:
                 f"'{point.file}'"
             ) from exc
     return node
+
+
+# Block style with the dash inset under its key — the de-facto convention for CI workflow files,
+# and what keeps a re-dumped point readable next to the template author's hand-written blocks.
+def _yaml() -> YAML:
+    yaml = YAML()
+    yaml.preserve_quotes = True
+    yaml.indent(mapping=2, sequence=4, offset=2)
+    return yaml
+
+
+def _splice_yaml_seq(file_path: Path, point: InjectionPoint, units: list[str]) -> None:
+    """Round-trip the owner's YAML, append each fragment to the anchored sequence, write it back.
+
+    Each unit is itself a YAML sequence fragment (one or more list items); its items extend the
+    target. ruamel preserves the rest of the file — key order, comments, block scalars — so only the
+    point grows. An empty or absent sequence at the anchor is materialised as a block sequence.
+    """
+    yaml = _yaml()
+    document = yaml.load(file_path)
+    sequence = _anchored_sequence(document, point)
+    for unit in units:
+        items = yaml.load(unit)
+        if not isinstance(items, list):
+            raise InjectionError(
+                f"injection point '{point.id}' fragment is not a YAML sequence: {unit!r}"
+            )
+        sequence.extend(items)
+    yaml.dump(document, file_path)
+
+
+def _anchored_sequence(document: Any, point: InjectionPoint) -> CommentedSeq:
+    *path, last = point.anchor.split(".")
+    parent = document
+    for key in path:
+        try:
+            parent = parent[key]
+        except (KeyError, TypeError) as exc:
+            raise InjectionError(
+                f"injection point '{point.id}' anchor '{point.anchor}' is not a path in "
+                f"'{point.file}'"
+            ) from exc
+    if not isinstance(parent, MutableMapping) or last not in parent:
+        raise InjectionError(
+            f"injection point '{point.id}' anchor '{point.anchor}' is not a path in '{point.file}'"
+        )
+    sequence = parent[last]
+    if sequence is None:
+        sequence = CommentedSeq()
+        parent[last] = sequence
+    if not isinstance(sequence, CommentedSeq):
+        raise InjectionError(
+            f"injection point '{point.id}' anchor '{point.anchor}' is not a sequence in "
+            f"'{point.file}'"
+        )
+    sequence.fa.set_block_style()
+    return sequence
 
 
 def _splice_markers(file_path: Path, point: InjectionPoint, units: list[str]) -> None:
