@@ -5,8 +5,11 @@ repo now), `[ ]` is still ahead. Each line is one task; the section headers are 
 numbers run straight through.
 
 Status today: the five lifecycle phases are wired end to end, every injection format and the
-compute-hook escape hatch are implemented, and the suite is green — but no real project builds yet:
-there are still no shippable layers, only seed-driven test fixtures.
+compute-hook escape hatch are implemented, and the recipe machinery (`render_recipe` +
+`{{TOKEN}}` resolution) is in `recipe.py` — but no real project builds yet: there are still no
+shippable layers, only seed-driven test fixtures. The recipe renderer takes a ci `Dialect` (the
+native token map, supplied by the ci layer as data); splicing rendered recipes into a pipeline file
+is part of authoring the first ci layer (#21), where a real dialect exists to drive it.
 
 ## Foundations
 
@@ -30,8 +33,8 @@ there are still no shippable layers, only seed-driven test fixtures.
 12. [x] `yaml-seq` injection — ruamel round-trip splice (drop the `UnsupportedInjectionFormat` pin)
 13. [x] `json-array` injection — for JSON dependency files (e.g. `package.json`), when a layer needs it
 14. [x] `compute` hook runner — replace the current hard refusal of `:hook` provides
-15. [ ] ci recipe rendering — assemble consumed `*_recipe` command lists into native job blocks
-16. [ ] `{{TOKEN}}` resolution at the ci render — `{{IMAGE}}`, `{{SHA}}`, `{{SECRET:..}}`, `{{SECRET_FILE:..}}`
+15. [x] ci recipe rendering — `recipe.render_recipe` turns a `*_recipe` command list into native script lines
+16. [x] `{{TOKEN}}` resolution at the ci render — `{{IMAGE}}`, `{{SHA}}`, `{{SECRET:..}}`, `{{SECRET_FILE:..}}` (`recipe.resolve_tokens`)
 17. [ ] `INITREE_SECRETS.md` generation from declared secret purposes + deploy inputs
 
 ## Real layers — slice 1 (`python+fastapi+docker+gh-actions+vps`)
