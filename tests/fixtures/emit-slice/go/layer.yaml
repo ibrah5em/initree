@@ -1,0 +1,20 @@
+# Full-value go language layer for emit tests: renders go.mod/.gitignore and declares the two
+# canonical injection points (text-block deps, line ignores) that gin contributes to.
+apiVersion: initree.dev/v1
+id: go
+slot: language
+name: Go module base
+provides:
+  - { key: runtime.language, type: string, value: "go" }
+  - { key: runtime.version, type: string, value: "${runtime.version}" }
+  - { key: runtime.base_image, type: string, value: "golang:${runtime.version}" }
+  - { key: runtime.run_base_image, type: string, value: "gcr.io/distroless/static-debian12" }
+  - { key: runtime.install_cmd, type: string, value: "go mod download" }
+  - { key: runtime.build_cmd, type: string, value: "CGO_ENABLED=0 go build -o /out/server ${app.entrypoint}" }
+  - { key: runtime.artifact, type: string, value: "/out/server" }
+owns:
+  - "go.mod"
+  - ".gitignore"
+injection_points:
+  - { id: runtime.dependencies, file: go.mod, format: text-block, anchor: "require-block", order: declared }
+  - { id: runtime.ignore, file: .gitignore, format: line, anchor: "ignore-block", order: alpha }
