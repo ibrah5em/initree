@@ -12,9 +12,8 @@
       "Bash(python3:*)",
       "Bash(pytest:*)",
       "Bash(uv:*)",
-      "Bash(ruff:*)"
-    ],
-    "ask": [
+      "Bash(ruff:*)",
+      "Bash(git push:*)",
       "Bash(git commit:*)"
     ],
     "deny": [
@@ -22,7 +21,6 @@
       "Read(./.env.*)",
       "Read(./**/.env)",
       "Bash(rm -rf:*)",
-      "Bash(git push:*)",
       "Bash(curl:*)",
       "Bash(wget:*)"
     ],
