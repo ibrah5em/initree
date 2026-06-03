@@ -91,11 +91,17 @@ class Layer(_Manifest):
     injection_points: list[InjectionPoint] = Field(default_factory=list)
     injects: list[Inject] = Field(default_factory=list)
     hooks: Hooks | None = None
+    # Filled by the loader, never by the YAML: the directory the manifest was read from, so emit
+    # can find this layer's templates/. Excluded from the contract surface — it is a filesystem
+    # locator, not a declared field.
+    source_dir: Path | None = Field(default=None, exclude=True)
 
     @classmethod
     def from_yaml(cls, path: Path) -> Layer:
         data = YAML(typ="safe").load(path.read_text())
-        return cls.model_validate(data)
+        layer = cls.model_validate(data)
+        layer.source_dir = path.parent
+        return layer
 
 
 def load_recipe(recipe_dir: Path) -> list[Layer]:
@@ -108,3 +114,21 @@ def load_recipe(recipe_dir: Path) -> list[Layer]:
     if not manifests:
         raise FileNotFoundError(f"no '<id>/layer.yaml' manifests found under {recipe_dir}")
     return [Layer.from_yaml(path) for path in manifests]
+
+
+def load_selected(layers_root: Path, ids: list[str]) -> list[Layer]:
+    """Load the layers a recipe names, each from ``<layers_root>/<id>/layer.yaml``.
+
+    Unlike load_recipe, which sweeps a directory, this loads an explicit selection — the ids the
+    CLI parsed out of the recipe string. A named layer with no manifest is a recipe error, raised
+    here so the CLI can report it before resolve runs.
+    """
+    layers: list[Layer] = []
+    for layer_id in ids:
+        path = layers_root / layer_id / "layer.yaml"
+        if not path.is_file():
+            raise FileNotFoundError(
+                f"recipe names layer '{layer_id}', but no manifest exists at {path}"
+            )
+        layers.append(Layer.from_yaml(path))
+    return layers
