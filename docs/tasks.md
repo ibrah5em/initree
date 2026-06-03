@@ -4,9 +4,9 @@ The whole project as a flat checklist, in roughly the order it gets built. `[x]`
 repo now), `[ ]` is still ahead. Each line is one task; the section headers are just signposts, the
 numbers run straight through.
 
-Status today: the five lifecycle phases are wired end to end and the suite is green, but no real
-project builds yet — there are no shippable layers (only seed-driven test fixtures), and `yaml-seq`
-injection is still unimplemented.
+Status today: the five lifecycle phases are wired end to end, every injection format and the
+compute-hook escape hatch are implemented, and the suite is green — but no real project builds yet:
+there are still no shippable layers, only seed-driven test fixtures.
 
 ## Foundations
 
@@ -27,9 +27,9 @@ injection is still unimplemented.
 
 ## Finish the engine
 
-12. [ ] `yaml-seq` injection — ruamel round-trip splice (drop the `UnsupportedInjectionFormat` pin)
-13. [ ] `json-array` injection — for JSON dependency files (e.g. `package.json`), when a layer needs it
-14. [ ] `compute` hook runner — replace the current hard refusal of `:hook` provides
+12. [x] `yaml-seq` injection — ruamel round-trip splice (drop the `UnsupportedInjectionFormat` pin)
+13. [x] `json-array` injection — for JSON dependency files (e.g. `package.json`), when a layer needs it
+14. [x] `compute` hook runner — replace the current hard refusal of `:hook` provides
 15. [ ] ci recipe rendering — assemble consumed `*_recipe` command lists into native job blocks
 16. [ ] `{{TOKEN}}` resolution at the ci render — `{{IMAGE}}`, `{{SHA}}`, `{{SECRET:..}}`, `{{SECRET_FILE:..}}`
 17. [ ] `INITREE_SECRETS.md` generation from declared secret purposes + deploy inputs
