@@ -12,9 +12,11 @@ import pytest
 from initree.recipe import (
     Dialect,
     MissingImageBaseError,
+    SecretRef,
     UnknownTokenError,
     render_recipe,
     resolve_tokens,
+    scan_secrets,
 )
 
 # GitLab: a secret renders to a bare $VAR; the registry credentials are predefined CI/CD variables,
@@ -124,3 +126,43 @@ def test_empty_secret_purpose_is_rejected():
 def test_image_without_registry_base_is_rejected():
     with pytest.raises(MissingImageBaseError, match="registry.image_name_base"):
         resolve_tokens("{{IMAGE}}", GITLAB, bus={})
+
+
+# scan_secrets — the observer side of the token grammar (#17 INITREE_SECRETS.md).
+
+
+def test_scan_collects_masked_and_file_secrets():
+    refs = scan_secrets(DOCKER_BUILD + ["kubectl --kubeconfig {{SECRET_FILE:kubeconfig}} apply"])
+    assert refs == [
+        SecretRef(purpose="registry_user", is_file=False),
+        SecretRef(purpose="registry", is_file=False),
+        SecretRef(purpose="kubeconfig", is_file=True),
+    ]
+
+
+def test_scan_dedupes_across_commands_keeping_first_seen_order():
+    refs = scan_secrets(
+        ["a {{SECRET:registry}}", "b {{SECRET:slack_webhook}}", "c {{SECRET:registry}}"]
+    )
+    assert refs == [
+        SecretRef(purpose="registry", is_file=False),
+        SecretRef(purpose="slack_webhook", is_file=False),
+    ]
+
+
+def test_scan_ignores_image_and_sha():
+    # IMAGE and SHA are runtime refs, not secrets — they never belong on the provisioning checklist.
+    assert scan_secrets(["docker build -t {{IMAGE}} . at {{SHA}}"]) == []
+
+
+def test_scan_is_lenient_on_malformed_and_unknown_tokens():
+    # The observer reports what it recognizes; resolve_tokens is the one that rejects these.
+    assert scan_secrets(["{{SECRET:}}", "{{BOGUS}}", "${{ github.sha }}"]) == []
+
+
+def test_scan_keeps_masked_and_file_of_the_same_purpose_distinct():
+    refs = scan_secrets(["{{SECRET:registry}}", "{{SECRET_FILE:registry}}"])
+    assert refs == [
+        SecretRef(purpose="registry", is_file=False),
+        SecretRef(purpose="registry", is_file=True),
+    ]

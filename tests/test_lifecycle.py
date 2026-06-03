@@ -39,6 +39,9 @@ def test_build_runs_the_five_phases_end_to_end(tmp_path):
     assert (out / "go.mod") in result.written
     # the frozen bus carries the engine seed through to the result
     assert result.bus["project.slug"] == "my-app"
+    # this slice's only recipe uses {{IMAGE}}, no secrets — so no provisioning report is written
+    assert result.secrets_report is None
+    assert not (out / "INITREE_SECRETS.md").exists()
     # this slice ships no finalize hooks
     assert result.finalized == []
 

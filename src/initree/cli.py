@@ -139,6 +139,9 @@ def _report(result: BuildResult, destination: Path) -> None:
     typer.echo(f"  order: {' -> '.join(result.order)}")
     for path in result.written:
         typer.echo(f"  + {path.relative_to(destination)}")
+    if result.secrets_report is not None:
+        rel = result.secrets_report.relative_to(destination)
+        typer.echo(f"  secrets: {rel} (provision before first deploy)")
     if result.finalized:
         typer.echo(f"  finalized: {', '.join(result.finalized)}")
 
