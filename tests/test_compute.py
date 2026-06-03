@@ -7,8 +7,9 @@ provide->provide references, the self-referential republish of an input, and rec
 `${...}` is resolved while `{{TOKEN}}` is left untouched for the ci layer.
 
 The rest are focused unit tests built from in-memory layers, one per rejection path
-(reference cycle, unknown reference, duplicate provider, unsupported compute hook) plus the
-optional-consume default fallback and the freeze guarantee.
+(reference cycle, unknown reference, duplicate provider) plus the optional-consume default
+fallback, the freeze guarantee, and the `:hook` escape hatch — a real script whose JSON output
+lands on the bus, and the two ways a hooked layer is rejected (no script, wrong keys back).
 """
 
 from collections.abc import MutableMapping
@@ -24,7 +25,7 @@ from initree.context import (
     UnknownReferenceError,
     compute,
 )
-from initree.manifest import Consume, Layer, Provide
+from initree.manifest import Consume, Hooks, Layer, Provide
 from initree.resolve import resolve
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -50,6 +51,26 @@ def _layer(layer_id: str, slot: str, *, provides=None, consumes=None) -> Layer:
         provides=provides or [],
         consumes=consumes or [],
     )
+
+
+def _hooked_layer(tmp_path: Path, layer_id: str, slot: str, script: str, *, provides) -> Layer:
+    # A real executable hook in a tmp layer dir — the exec bit on a committed fixture is fragile,
+    # the same reason finalize's tests build their hooks here too.
+    src = tmp_path / layer_id
+    src.mkdir(parents=True, exist_ok=True)
+    hook = src / "compute.sh"
+    hook.write_text(script)
+    hook.chmod(0o755)
+    layer = Layer(
+        apiVersion="initree.dev/v1",
+        id=layer_id,
+        slot=slot,
+        name=layer_id,
+        provides=provides,
+        hooks=Hooks(compute="compute.sh"),
+    )
+    layer.source_dir = src
+    return layer
 
 
 def test_compute_resolves_the_full_slice():
@@ -155,14 +176,50 @@ def test_duplicate_provider_is_rejected():
         compute([one, two], ["one", "two"], {})
 
 
-def test_compute_hook_value_is_unsupported_for_now():
+def test_compute_hook_value_lands_on_the_bus_and_feeds_later_refs(tmp_path):
+    # the hook reads the bus off the environment and prints JSON; a sibling provide refs the result
+    script = '#!/bin/sh\nprintf \'{"runtime.build_id": "%s-001"}\' "$INITREE_PROJECT_SLUG"\n'
+    hooked = _hooked_layer(
+        tmp_path,
+        "go",
+        "language",
+        script,
+        provides=[
+            Provide(key="runtime.build_id", type="string", value=":hook"),
+            Provide(key="runtime.tag", type="string", value="v-${runtime.build_id}"),
+        ],
+    )
+    bus = compute([hooked], ["go"], {"project.slug": "myapp"})
+
+    assert bus["runtime.build_id"] == "myapp-001"
+    assert bus["runtime.tag"] == "v-myapp-001"
+
+
+def test_hook_provide_without_a_compute_hook_is_rejected():
     hooked = _layer(
         "hooked",
         "language",
         provides=[Provide(key="runtime.version", type="string", value=":hook")],
     )
-    with pytest.raises(ComputeError, match="hook"):
+    with pytest.raises(ComputeError, match="no.*hooks.compute"):
         compute([hooked], ["hooked"], {})
+
+
+def test_compute_hook_returning_wrong_keys_is_rejected(tmp_path):
+    # declares two :hook keys but the script only returns one
+    script = '#!/bin/sh\nprintf \'{"runtime.build_id": "x"}\'\n'
+    hooked = _hooked_layer(
+        tmp_path,
+        "go",
+        "language",
+        script,
+        provides=[
+            Provide(key="runtime.build_id", type="string", value=":hook"),
+            Provide(key="runtime.commit", type="string", value=":hook"),
+        ],
+    )
+    with pytest.raises(ComputeError, match="did not return"):
+        compute([hooked], ["go"], {})
 
 
 def test_the_bus_is_frozen_and_decoupled_from_its_inputs():
