@@ -5,11 +5,13 @@ repo now), `[ ]` is still ahead. Each line is one task; the section headers are 
 numbers run straight through.
 
 Status today: the five lifecycle phases are wired end to end, every injection format and the
-compute-hook escape hatch are implemented, and the recipe machinery (`render_recipe` +
-`{{TOKEN}}` resolution) is in `recipe.py` — but no real project builds yet: there are still no
-shippable layers, only seed-driven test fixtures. The recipe renderer takes a ci `Dialect` (the
-native token map, supplied by the ci layer as data); splicing rendered recipes into a pipeline file
-is part of authoring the first ci layer (#21), where a real dialect exists to drive it.
+compute-hook escape hatch are implemented, the recipe machinery (`render_recipe` +
+`{{TOKEN}}` resolution) is in `recipe.py`, and the build emits an `INITREE_SECRETS.md`
+provisioning checklist from the secret purposes its recipes declare — but no real project builds
+yet: there are still no shippable layers, only seed-driven test fixtures. The recipe renderer takes
+a ci `Dialect` (the native token map, supplied by the ci layer as data); splicing rendered recipes
+into a pipeline file is part of authoring the first ci layer (#21), where a real dialect exists to
+drive it.
 
 ## Foundations
 
@@ -35,7 +37,7 @@ is part of authoring the first ci layer (#21), where a real dialect exists to dr
 14. [x] `compute` hook runner — replace the current hard refusal of `:hook` provides
 15. [x] ci recipe rendering — `recipe.render_recipe` turns a `*_recipe` command list into native script lines
 16. [x] `{{TOKEN}}` resolution at the ci render — `{{IMAGE}}`, `{{SHA}}`, `{{SECRET:..}}`, `{{SECRET_FILE:..}}` (`recipe.resolve_tokens`)
-17. [ ] `INITREE_SECRETS.md` generation from declared secret purposes + deploy inputs
+17. [x] `INITREE_SECRETS.md` generation from declared secret purposes — token scan over the frozen bus (the deploy-input cluster section, e.g. the k8s pull-secret, is deferred to the k8s layer #26 where a real consumer exists)
 
 ## Real layers — slice 1 (`python+fastapi+docker+gh-actions+vps`)
 
