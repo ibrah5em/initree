@@ -12,14 +12,11 @@ it does not write to it. A hook that is missing, not runnable, or exits non-zero
 
 from __future__ import annotations
 
-import json
-import os
 import subprocess
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
 
-from initree.context import Bus
+from initree.context import Bus, hook_env
 from initree.manifest import Layer
 
 
@@ -36,7 +33,7 @@ def finalize(layers: list[Layer], order: list[str], bus: Bus, out_dir: Path) -> 
     by_id = {layer.id: layer for layer in layers}
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    env = _hook_env(bus)
+    env = hook_env(bus)
 
     ran: list[str] = []
     for layer_id in order:
@@ -79,19 +76,3 @@ def _run_hook(layer_id: str, hook: Path, out_dir: Path, env: Mapping[str, str]) 
         raise FinalizeError(
             f"layer '{layer_id}' finalize hook exited {result.returncode}: {detail}"
         )
-
-
-def _hook_env(bus: Bus) -> dict[str, str]:
-    """The process environment plus the bus, each key as ``INITREE_<UPPER_SNAKE>``."""
-    env = dict(os.environ)
-    for key, value in bus.items():
-        env[f"INITREE_{key.upper().replace('.', '_')}"] = _env_value(value)
-    return env
-
-
-def _env_value(value: Any) -> str:
-    if isinstance(value, bool):
-        return "true" if value else "false"
-    if isinstance(value, (list, dict)):
-        return json.dumps(value)
-    return str(value)
