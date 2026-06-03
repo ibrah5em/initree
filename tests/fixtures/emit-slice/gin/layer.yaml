@@ -1,0 +1,19 @@
+apiVersion: initree.dev/v1
+id: gin
+slot: framework
+name: Gin HTTP service
+requires:
+  slots:
+    - { slot: language, one_of: [go] }
+consumes:
+  - { key: runtime.language, required: true }
+provides:
+  - { key: app.port, type: int, value: "${app.port}" }
+  - { key: app.start_command, type: string, value: "/server" }
+  - { key: app.healthcheck_path, type: string, value: "/healthz" }
+owns:
+  - "cmd/**"
+  - "internal/**"
+injects:
+  - { into: runtime.dependencies, format: text-block, template: "github.com/gin-gonic/gin v1.10.0" }
+  - { into: runtime.ignore, format: line, items: ["/server", "*.log"] }

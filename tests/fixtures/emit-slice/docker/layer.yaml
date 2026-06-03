@@ -1,0 +1,26 @@
+apiVersion: initree.dev/v1
+id: docker
+slot: container
+name: Docker image
+consumes:
+  - { key: runtime.base_image, required: true }
+  - { key: runtime.install_cmd, required: true }
+  - { key: app.start_command, required: true }
+  - { key: app.port, required: true }
+  - { key: runtime.build_cmd, required: false }
+  - { key: runtime.artifact, required: false }
+  - { key: runtime.run_base_image, required: false }
+provides:
+  - { key: container.runtime, type: string, value: "docker" }
+  - { key: container.image_name, type: string, value: "${project.slug}" }
+  - { key: container.exposed_port, type: int, value: "${app.port}" }
+  - { key: registry.host, type: string, value: "registry.example.com/${project.slug}" }
+  - { key: registry.image_name_base, type: string, value: "${registry.host}" }
+  - key: container.build_recipe
+    type: recipe
+    value:
+      - "docker build -t {{IMAGE}} ."
+      - "docker push {{IMAGE}}"
+owns:
+  - "Dockerfile"
+  - ".dockerignore"
