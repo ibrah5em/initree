@@ -23,15 +23,17 @@ from initree.finalize import finalize
 from initree.manifest import Layer
 from initree.prompt import Asker, prompt
 from initree.resolve import resolve
+from initree.secrets import write_secret_report
 
 
 @dataclass(frozen=True)
 class BuildResult:
-    """What one run produced: the topological order, the frozen bus, files written, hooks run."""
+    """What one run produced: order, frozen bus, files written, secrets report, hooks run."""
 
     order: list[str]
     bus: Bus
     written: list[Path]
+    secrets_report: Path | None
     finalized: list[str]
 
 
@@ -52,8 +54,15 @@ def build(
     context = prompt(layers, order, seed, ask)
     bus = compute(layers, order, context)
     written = emit(layers, order, bus, out_dir)
+    secrets_report = write_secret_report(layers, bus, out_dir)
     finalized = finalize(layers, order, bus, out_dir) if run_finalize else []
-    return BuildResult(order=order, bus=bus, written=written, finalized=finalized)
+    return BuildResult(
+        order=order,
+        bus=bus,
+        written=written,
+        secrets_report=secrets_report,
+        finalized=finalized,
+    )
 
 
 def engine_seed(name: str, out_dir: Path) -> dict[str, Any]:

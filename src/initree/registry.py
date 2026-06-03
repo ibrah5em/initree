@@ -43,3 +43,14 @@ def engine_seeded_keys() -> frozenset[str]:
     """
     data = _load()
     return frozenset(entry["key"] for entry in data["keys"] if entry.get("owner") == "engine")
+
+
+@lru_cache(maxsize=1)
+def secret_purposes() -> dict[str, str]:
+    """Each declared secret purpose mapped to its human-readable note (docs/03 §10).
+
+    The provisioning report (INITREE_SECRETS.md) renders an observed purpose with this note, so the
+    registry stays the one place the secret vocabulary and its descriptions live.
+    """
+    data = _load()
+    return {entry["purpose"]: entry.get("note", "") for entry in data.get("secret_purposes", [])}

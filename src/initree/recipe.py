@@ -24,7 +24,7 @@ only parses tokens and substitutes what the dialect returns.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -100,6 +100,51 @@ def resolve_tokens(text: str, dialect: Dialect, bus: Mapping[str, Any]) -> str:
     return _TOKEN.sub(replace, text)
 
 
+@dataclass(frozen=True)
+class SecretRef:
+    """A secret a recipe declares through a token: its logical purpose and whether it is file-type.
+
+    ``is_file`` separates ``{{SECRET_FILE:purpose}}`` (a path to a file-type variable) from
+    ``{{SECRET:purpose}}`` (a masked variable). The provisioning report groups by it.
+    """
+
+    purpose: str
+    is_file: bool
+
+
+def scan_secrets(commands: Iterable[str]) -> list[SecretRef]:
+    """Collect the secrets a recipe declares, deduplicated, in first-seen order.
+
+    Reads the same ``{{...}}`` grammar :func:`resolve_tokens` substitutes, but keeps only the two
+    secret forms — ``{{IMAGE}}``/``{{SHA}}`` name no secret. It feeds ``INITREE_SECRETS.md``, an
+    observer over the frozen bus, so it stays lenient: an unknown or malformed token is the ci
+    render's to reject (loudly, via resolve_tokens), not this scan's to police.
+    """
+    seen: set[SecretRef] = set()
+    refs: list[SecretRef] = []
+    for command in commands:
+        for match in _TOKEN.finditer(command):
+            ref = _secret_ref(match.group(1).strip())
+            if ref is not None and ref not in seen:
+                seen.add(ref)
+                refs.append(ref)
+    return refs
+
+
+def _secret_ref(token: str) -> SecretRef | None:
+    """Classify one token's inner text as a secret reference, or None if it names no secret.
+
+    `SECRET_FILE:` is tested before `SECRET:` so the longer prefix wins. An empty purpose
+    (`{{SECRET:}}`) yields None — a malformed token names nothing to provision, and the ci render is
+    where it is rejected.
+    """
+    if file_purpose := _strip_prefix(token, _SECRET_FILE):
+        return SecretRef(purpose=file_purpose, is_file=True)
+    if purpose := _strip_prefix(token, _SECRET):
+        return SecretRef(purpose=purpose, is_file=False)
+    return None
+
+
 def _resolve_one(token: str, dialect: Dialect, bus: Mapping[str, Any]) -> str:
     if token == "IMAGE":
         return _image(dialect, bus)
@@ -121,14 +166,25 @@ def _purpose(token: str, prefix: str, dialect: Dialect) -> str | None:
     `SECRET_FILE:` is tested before `SECRET:` by the caller, so the two never collide. An empty
     purpose (`{{SECRET:}}`) is a malformed token, not a missing branch — hence loud, not None.
     """
-    if not token.startswith(prefix):
+    purpose = _strip_prefix(token, prefix)
+    if purpose is None:
         return None
-    purpose = token[len(prefix) :].strip()
     if not purpose:
         raise UnknownTokenError(
             f"{dialect.provider}: recipe token '{{{{{token}}}}}' names no secret purpose"
         )
     return purpose
+
+
+def _strip_prefix(token: str, prefix: str) -> str | None:
+    """The text after `prefix` (whitespace-stripped) if `token` carries it, else None.
+
+    An empty purpose returns ``""`` (falsy), not None, so callers can tell "wrong prefix" apart from
+    "this prefix, no purpose": resolve_tokens rejects the empty case, scan_secrets skips it.
+    """
+    if not token.startswith(prefix):
+        return None
+    return token[len(prefix) :].strip()
 
 
 def _image(dialect: Dialect, bus: Mapping[str, Any]) -> str:
