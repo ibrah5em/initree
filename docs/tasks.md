@@ -7,11 +7,12 @@ numbers run straight through.
 Status today: the five lifecycle phases are wired end to end, every injection format and the
 compute-hook escape hatch are implemented, the recipe machinery (`render_recipe` +
 `{{TOKEN}}` resolution) is in `recipe.py`, and the build emits an `INITREE_SECRETS.md`
-provisioning checklist from the secret purposes its recipes declare — but no real project builds
-yet: there are still no shippable layers, only seed-driven test fixtures. The recipe renderer takes
-a ci `Dialect` (the native token map, supplied by the ci layer as data); splicing rendered recipes
-into a pipeline file is part of authoring the first ci layer (#21), where a real dialect exists to
-drive it.
+provisioning checklist from the secret purposes its recipes declare. Slice 1 now builds for real:
+`python+fastapi+docker+gh-actions+vps-ssh` composes five shipped layers under `layers/` into a
+deployable FastAPI service (`tests/test_slice1.py` proves it end to end). The gh-actions ci layer is
+the terminal assembler — its compute hook renders the consumed recipes through the GitHub dialect,
+the sole place `{{...}}` tokens resolve, and splices the steps into the workflow it owns. Next is
+slice 2 (the go/gitlab-ci/k8s/slack swap) and the golden tests.
 
 ## Foundations
 
@@ -41,11 +42,11 @@ drive it.
 
 ## Real layers — slice 1 (`python+fastapi+docker+gh-actions+vps`)
 
-18. [ ] `python` — language slot (owns `pyproject.toml`, exposes `runtime.dependencies`)
-19. [ ] `fastapi` — framework slot (provides `app.*`, injects its deps)
-20. [ ] `docker` — container slot (provides `container.*` + `container.build_recipe`)
-21. [ ] `gh-actions` — ci slot (the assembler: renders recipes, resolves tokens)
-22. [ ] `vps-ssh` — deploy slot (consumes `container.*`, provides `deploy.apply_recipe`)
+18. [x] `python` — language slot (owns `pyproject.toml`, exposes `runtime.dependencies`)
+19. [x] `fastapi` — framework slot (provides `app.*`, injects its deps)
+20. [x] `docker` — container slot (provides `container.*` + `container.build_recipe`)
+21. [x] `gh-actions` — ci slot (the assembler: renders recipes, resolves tokens)
+22. [x] `vps-ssh` — deploy slot (consumes `container.*`, provides `deploy.apply_recipe`)
 
 ## Real layers — slice 2 (`go+gin+docker+gitlab-ci+k8s+slack`)
 
