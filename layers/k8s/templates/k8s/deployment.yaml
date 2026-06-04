@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${container.image_name}
+  namespace: ${deploy.k8s.namespace}
+spec:
+  replicas: ${deploy.k8s.replicas}
+  selector:
+    matchLabels:
+      app: ${container.image_name}
+  template:
+    metadata:
+      labels:
+        app: ${container.image_name}
+    spec:
+      imagePullSecrets:
+        - name: ${deploy.k8s.pull_secret}
+      containers:
+        - name: ${container.image_name}
+          # CI rewrites this via `kustomize edit set image app=<registry>/<image>:<sha>` before apply.
+          image: app
+          ports:
+            - containerPort: ${container.exposed_port}
+          readinessProbe:
+            httpGet:
+              path: ${app.healthcheck_path}
+              port: ${container.exposed_port}

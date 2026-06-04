@@ -1,0 +1,31 @@
+stages: [test, build, deploy, notify]
+
+test:
+  stage: test
+  image: ${runtime.base_image}
+  script:
+    - ${runtime.install_cmd}
+    - go test ./...
+
+build_image:
+  stage: build
+  image: docker:27
+  services: [docker:27-dind]
+  script:
+${ci.gitlab_ci.build_script}
+
+deploy:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+${ci.gitlab_ci.deploy_script}
+  variables:
+    KUBECONFIG: $KUBE_CONFIG
+
+# initree:if notify.send_recipe
+notify:
+  stage: notify
+  when: on_success
+  script:
+${ci.gitlab_ci.notify_script}
+# initree:endif

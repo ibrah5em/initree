@@ -1,0 +1,30 @@
+apiVersion: initree.dev/v1
+id: gin
+slot: framework
+name: Gin HTTP service
+description: Produces the same app.* contract fastapi did — only the values differ — and injects its dependency into go.mod.
+
+requires:
+  slots:
+    - { slot: language, one_of: [go] }
+
+inputs:
+  - { key: app.port, prompt: "App port", type: int, default: 8080 }
+
+consumes:
+  - { key: runtime.language, required: true }
+
+provides:
+  - { key: app.port, type: int, value: "${app.port}" }
+  - { key: app.start_command, type: string, value: "/server" }   # the built binary in the final image
+  - { key: app.healthcheck_path, type: string, value: "/healthz" }
+
+owns:
+  - "cmd/**"
+  - "internal/**"
+
+injects:
+  - into: runtime.dependencies
+    format: text-block
+    template: |
+      github.com/gin-gonic/gin v1.10.0
