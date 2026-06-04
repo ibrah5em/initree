@@ -1,0 +1,35 @@
+apiVersion: initree.dev/v1
+id: k8s
+slot: deploy
+name: Deploy to Kubernetes
+description: Consumes the same container.exposed_port vps-ssh did, owns the cluster manifests, and surfaces facts to other layers only through the common deploy.* keys.
+
+inputs:
+  # deploy.k8s.* are backend-private (docs/03 §6): they appear only in k8s-owned files and its own
+  # recipe, never on the shared bus for another layer to read.
+  - { key: deploy.k8s.namespace, prompt: "Namespace", type: string, default: "default" }
+  - { key: deploy.k8s.replicas, prompt: "Replicas", type: int, default: 2 }
+  - { key: deploy.k8s.pull_secret, prompt: "Image pull secret (cluster)", type: string, default: "regcred" }
+  - { key: deploy.k8s.host, prompt: "Ingress host (optional)", type: string, default: "" }
+
+consumes:
+  - { key: container.image_name, required: true }
+  - { key: container.exposed_port, required: true }      # the same key vps-ssh consumed in slice 1
+  - { key: registry.image_name_base, required: true }
+  - { key: app.healthcheck_path, required: false }       # readiness probe target
+
+provides:
+  - { key: deploy.target, type: string, value: "kubernetes" }
+  - { key: deploy.summary, type: string,
+      value: "kubernetes · ns/${deploy.k8s.namespace} · ${deploy.k8s.replicas} replicas" }
+  - { key: deploy.url, type: string, value: "https://${deploy.k8s.host}" }
+  # {{IMAGE}} stays deferred for the ci layer; ${...} is concrete after compute.
+  - key: deploy.apply_recipe
+    type: recipe
+    value:
+      - "cd k8s && kustomize edit set image app={{IMAGE}} && cd .."
+      - "kubectl apply -k k8s/ -n ${deploy.k8s.namespace}"
+      - "kubectl rollout status deployment/${container.image_name} -n ${deploy.k8s.namespace}"
+
+owns:
+  - "k8s/**"
