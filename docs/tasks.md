@@ -7,12 +7,16 @@ numbers run straight through.
 Status today: the five lifecycle phases are wired end to end, every injection format and the
 compute-hook escape hatch are implemented, the recipe machinery (`render_recipe` +
 `{{TOKEN}}` resolution) is in `recipe.py`, and the build emits an `INITREE_SECRETS.md`
-provisioning checklist from the secret purposes its recipes declare. Slice 1 now builds for real:
-`python+fastapi+docker+gh-actions+vps-ssh` composes five shipped layers under `layers/` into a
-deployable FastAPI service (`tests/test_slice1.py` proves it end to end). The gh-actions ci layer is
-the terminal assembler — its compute hook renders the consumed recipes through the GitHub dialect,
-the sole place `{{...}}` tokens resolve, and splices the steps into the workflow it owns. Next is
-slice 2 (the go/gitlab-ci/k8s/slack swap) and the golden tests.
+provisioning checklist from the secret purposes its recipes declare. Both slices now build for real
+from the shipped layers under `layers/`. Slice 1 (`python+fastapi+docker+gh-actions+vps-ssh`) is a
+deployable FastAPI service; slice 2 (`go+gin+docker+gitlab-ci+k8s+slack`) is the generalization
+proof made concrete — a compiled language, a multi-stage container, a second CI dialect, a
+namespaced deploy target, and an optional notify slot, all through the same engine and the same
+docker manifest (`tests/test_slice1.py` and `tests/test_slice2.py` prove each end to end). The one
+engine addition slice 2 needed was a backend-branching template conditional (`initree:if` in
+`emit`), so docker's single owned Dockerfile renders multi-stage for go and single-stage for python
+without the engine learning either stack. Next are the byte-exact golden tests against the docs/01
+§6 and docs/02 §7 renders, then the release tasks.
 
 ## Foundations
 
@@ -50,12 +54,13 @@ slice 2 (the go/gitlab-ci/k8s/slack swap) and the golden tests.
 
 ## Real layers — slice 2 (`go+gin+docker+gitlab-ci+k8s+slack`)
 
-23. [ ] `go` — language slot
-24. [ ] `gin` — framework slot
-25. [ ] `gitlab-ci` — ci slot (second assembler, proves the ci swap)
-26. [ ] `k8s` — deploy slot
-27. [ ] `slack` — notify slot (optional, owns no files)
-28. [ ] reuse `docker` unchanged across both slices (the swap-radius proof)
+23. [x] `go` — language slot (owns `go.mod`/`.gitignore`, compiled: build_cmd/artifact/run_base_image)
+24. [x] `gin` — framework slot (same `app.*` keys as fastapi, injects its dep into `go.mod`)
+25. [x] `gitlab-ci` — ci slot (second assembler: same `consumes`, GitLab dialect + `stages`/`script`)
+26. [x] `k8s` — deploy slot (consumes the same `container.exposed_port`, owns `k8s/**`)
+27. [x] `slack` — notify slot (optional, owns no files, recipe-only)
+28. [x] reuse `docker` unchanged across both slices — manifest byte-identical; only the owned
+        Dockerfile branches (multi-stage) via the new `emit` `initree:if` conditional
 
 ## End-to-end proof
 
