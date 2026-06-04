@@ -236,6 +236,47 @@ def test_render_text_is_loud_on_an_unknown_reference():
         render_text("${nope.missing}", Bus({}))
 
 
+# A docker-style template that branches multi-stage vs single-stage on an optional build key.
+_CONDITIONAL = (
+    "FROM base\n"
+    "# initree:if runtime.build_cmd\n"
+    "RUN ${runtime.build_cmd}\n"
+    "# initree:else\n"
+    "RUN ${runtime.install_cmd}\n"
+    "# initree:endif\n"
+    "EXPOSE ${app.port}\n"
+)
+
+
+def test_conditional_keeps_the_if_branch_when_the_key_is_present():
+    bus = Bus({"runtime.build_cmd": "go build", "runtime.install_cmd": "x", "app.port": 8080})
+    out = render_text(_CONDITIONAL, bus)
+    assert out == "FROM base\nRUN go build\nEXPOSE 8080\n"
+
+
+def test_conditional_takes_the_else_branch_when_the_key_is_absent():
+    # runtime.build_cmd off the bus (interpreted language): the else branch renders, and the
+    # if-branch — which references a key not on the bus — never reaches resolution.
+    bus = Bus({"runtime.install_cmd": "uv sync", "app.port": 8000})
+    out = render_text(_CONDITIONAL, bus)
+    assert out == "FROM base\nRUN uv sync\nEXPOSE 8000\n"
+
+
+def test_a_template_without_directives_is_rendered_byte_for_byte():
+    text = "line one\nport ${app.port}\n"
+    assert render_text(text, Bus({"app.port": 8080})) == "line one\nport 8080\n"
+
+
+def test_conditional_rejects_an_unclosed_block():
+    with pytest.raises(TemplateRenderError):
+        render_text("# initree:if app.port\nx\n", Bus({"app.port": 8080}))
+
+
+def test_conditional_rejects_an_else_with_no_open_if():
+    with pytest.raises(TemplateRenderError):
+        render_text("# initree:else\nx\n", Bus({}))
+
+
 def test_emit_rejects_a_render_outside_the_layers_owns(tmp_path):
     src = _template(tmp_path / "rogue", "secrets.env", "x")
     rogue = _layer("rogue", "language", owns=["allowed.txt"], source_dir=src)

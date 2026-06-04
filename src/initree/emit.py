@@ -44,6 +44,16 @@ _REF = re.compile(r"\$\{([^}]+)\}")
 # the spot; emit replaces the body between them. Disjoint from the {{TOKEN}} tier by construction.
 _MARK = "initree:inject"
 
+# Backend-branching conditional markers. A backend-agnostic owner (docker) ships one template that
+# renders differently per stack — multi-stage when `runtime.build_cmd` is present, single-stage when
+# it is absent — without the engine learning the stacks. The directives are their own comment-guard
+# markers (same family as the injection ones), so they are inert in the host file's syntax and
+# disjoint from both interpolation tiers; render_text strips them, keeping only the taken branch.
+# Presence-and-truthy of a bus key is the whole predicate: no expressions, no nesting.
+_IF = "initree:if"
+_ELSE = "initree:else"
+_ENDIF = "initree:endif"
+
 
 class EmitError(Exception):
     """Base for every emit-phase failure. emit() raises a subclass, never this directly."""
@@ -94,7 +104,14 @@ def emit(layers: list[Layer], order: list[str], bus: Bus, out_dir: Path) -> list
 
 
 def render_text(text: str, bus: Mapping[str, Any]) -> str:
-    """Resolve every `${namespace.key}` in `text` against the bus, leaving `{{TOKEN}}` untouched."""
+    """Resolve every `${namespace.key}` in `text` against the bus, leaving `{{TOKEN}}` untouched.
+
+    A template may also carry `initree:if`/`else`/`endif` blocks; those are evaluated first (the
+    dropped branch never reaches `${...}` resolution), so a single owned template can branch on the
+    stack it lands in. A template with no such markers is rendered byte-for-byte as before.
+    """
+    if any(tag in text for tag in (_IF, _ELSE, _ENDIF)):
+        text = _apply_conditionals(text, bus)
 
     def replace(match: re.Match[str]) -> str:
         key = match.group(1).strip()
@@ -103,6 +120,75 @@ def render_text(text: str, bus: Mapping[str, Any]) -> str:
         return str(bus[key])
 
     return _REF.sub(replace, text)
+
+
+def _apply_conditionals(text: str, bus: Mapping[str, Any]) -> str:
+    """Keep only the taken branch of each `initree:if`/`else`/`endif` block; strip the directives.
+
+    One block, one level — the only branching a layer template needs (a Dockerfile picking single
+    vs multi-stage). An unbalanced or nested block is an authoring error, raised loud rather than
+    rendered into a broken file.
+    """
+    kept: list[str] = []
+    open_key: str | None = None
+    branch_taken = False
+    emitting = True
+    for line in text.split("\n"):
+        directive = _directive(line)
+        if directive == _ENDIF:
+            if open_key is None:
+                raise TemplateRenderError("'initree:endif' has no open 'initree:if'")
+            open_key, emitting = None, True
+        elif directive == _ELSE:
+            if open_key is None:
+                raise TemplateRenderError("'initree:else' has no open 'initree:if'")
+            emitting = not branch_taken
+        elif directive == _IF:
+            if open_key is not None:
+                raise TemplateRenderError("nested 'initree:if' blocks are not supported")
+            open_key = _if_key(line)
+            branch_taken = _truthy(bus, open_key)
+            emitting = branch_taken
+        elif emitting:
+            kept.append(line)
+    if open_key is not None:
+        raise TemplateRenderError(f"'initree:if {open_key}' is never closed by 'initree:endif'")
+    return "\n".join(kept)
+
+
+def _directive(line: str) -> str | None:
+    """Which conditional directive a line carries, if any. Longer tags are tested first so a line is
+    never misread (`initree:endif` is disjoint from `initree:if` by construction, but order keeps it
+    obvious)."""
+    if _ENDIF in line:
+        return _ENDIF
+    if _ELSE in line:
+        return _ELSE
+    if _IF in line:
+        return _IF
+    return None
+
+
+def _if_key(line: str) -> str:
+    """The bus key an `initree:if` line tests, with an optional `${...}` wrapper stripped."""
+    after = line.split(_IF, 1)[1].split()
+    token = after[0] if after else ""
+    token = token.removeprefix("${").removesuffix("}")
+    if not token:
+        raise TemplateRenderError("'initree:if' needs a bus key to test")
+    return token
+
+
+def _truthy(bus: Mapping[str, Any], key: str) -> bool:
+    """Whether `key` is present on the bus with a non-empty value — the conditional's predicate."""
+    if key not in bus:
+        return False
+    value = bus[key]
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip() != ""
+    return value is not None
 
 
 def _render_templates(layer: Layer, bus: Bus) -> Iterator[tuple[str, str]]:
