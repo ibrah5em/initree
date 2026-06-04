@@ -1,0 +1,35 @@
+apiVersion: initree.dev/v1
+id: fastapi
+slot: framework
+name: FastAPI service
+description: Produces the app.* contract the rest of the stack reads, and adds its deps to pyproject.
+
+requires:
+  slots:
+    - { slot: language, one_of: [python] }
+
+inputs:
+  # app.module is a private input — it derives app.start_command, it is not a shared key (docs/03 §6).
+  - { key: app.module, prompt: "ASGI app path", type: string, default: "app.main:app" }
+  - { key: app.port, prompt: "App port", type: int, default: 8000 }
+
+consumes:
+  - { key: runtime.language, required: true }
+  - { key: runtime.version, required: true }
+
+provides:
+  - { key: app.port, type: int, value: "${app.port}" }
+  - { key: app.start_command, type: string,
+      value: "uvicorn ${app.module} --host 0.0.0.0 --port ${app.port}" }
+  - { key: app.healthcheck_path, type: string, value: "/health" }
+
+owns:
+  - "app/**"
+  - "tests/**"
+
+injects:
+  - into: runtime.dependencies
+    format: toml-array
+    items:
+      - "fastapi>=0.110"
+      - "uvicorn[standard]>=0.29"

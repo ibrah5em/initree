@@ -1,0 +1,32 @@
+apiVersion: initree.dev/v1
+id: vps-ssh
+slot: deploy
+name: Deploy to a VPS over SSH
+description: Pulls the published image on a host over SSH. Binds only to container.* capabilities.
+
+inputs:
+  # deploy.vps.host is backend-private (docs/03 §12) — it surfaces to others only via deploy.summary.
+  - { key: deploy.vps.host, prompt: "VPS host (user@ip)", type: string, default: "deploy@example.com" }
+
+consumes:
+  - { key: container.image_name, required: true }
+  - { key: container.exposed_port, required: true }      # the port, two hops from fastapi
+  - { key: registry.image_name_base, required: true }
+
+provides:
+  - { key: deploy.target, type: string, value: "vps" }
+  - { key: deploy.summary, type: string,
+      value: "vps · ${deploy.vps.host} · 80 -> ${container.exposed_port}" }
+  - { key: deploy.url, type: string, value: "" }
+  # {{IMAGE}} stays deferred for the ci layer; ${...} is concrete after compute.
+  - key: deploy.apply_recipe
+    type: recipe
+    value:
+      - 'ssh ${deploy.vps.host} "docker pull {{IMAGE}} && docker run -d --restart=always
+        --name ${container.image_name} -p 80:${container.exposed_port} {{IMAGE}}"'
+
+owns:
+  - "deploy/deploy.sh"
+
+hooks:
+  finalize: hooks/chmod.sh

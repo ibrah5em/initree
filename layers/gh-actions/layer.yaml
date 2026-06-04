@@ -1,0 +1,26 @@
+apiVersion: initree.dev/v1
+id: gh-actions
+slot: ci
+name: GitHub Actions pipeline
+description: The terminal assembler — consumes every layer's recipe and renders {{TOKEN}}s natively.
+
+consumes:
+  - { key: runtime.install_cmd, required: true }
+  - { key: registry.image_name_base, required: true }
+  - { key: container.build_recipe, required: true }
+  - { key: deploy.apply_recipe, required: true }
+  - { key: notify.send_recipe, required: false }
+
+provides:
+  - { key: ci.provider, type: string, value: "gh-actions" }
+  # Backend-private (docs/03 §12): the workflow's build/deploy step blocks, rendered from the
+  # consumed recipes by the compute hook. Never consumed by another layer — only this layer's
+  # own workflow template references them. ":hook" because only code can resolve the {{TOKEN}}s.
+  - { key: ci.gh_actions.build_steps, type: string, value: ":hook" }
+  - { key: ci.gh_actions.deploy_steps, type: string, value: ":hook" }
+
+owns:
+  - ".github/workflows/ci.yml"
+
+hooks:
+  compute: hooks/render_steps.py

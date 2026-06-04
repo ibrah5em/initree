@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: ${runtime.install_cmd}
+      - run: uv run pytest
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+${ci.gh_actions.build_steps}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+${ci.gh_actions.deploy_steps}
