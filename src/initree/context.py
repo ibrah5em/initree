@@ -235,8 +235,10 @@ def _hook_keys(layer: Layer) -> set[str]:
 
 def _run_hook(layer_id: str, hook: Path, cwd: Path, env: Mapping[str, str]) -> str:
     try:
+        # Absolute path: the hook runs with cwd=layer dir, so a path relative to the engine's cwd
+        # would resolve against the wrong base (e.g. a relative --layers-dir).
         result = subprocess.run(
-            [str(hook)],
+            [str(hook.resolve())],
             cwd=cwd,
             env=dict(env),
             capture_output=True,
