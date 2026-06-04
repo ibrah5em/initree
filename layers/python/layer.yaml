@@ -1,0 +1,28 @@
+apiVersion: initree.dev/v1
+id: python
+slot: language
+name: Python project base
+description: Owns the packaging manifest and exposes the dependency injection point frameworks add to.
+
+inputs:
+  - { key: runtime.version, prompt: "Python version", type: string, default: "3.12" }
+
+provides:
+  - { key: runtime.language, type: string, value: "python" }
+  - { key: runtime.version, type: string, value: "${runtime.version}" }
+  - { key: runtime.base_image, type: string, value: "python:${runtime.version}-slim" }
+  # `uv sync` (not --frozen): the scaffold ships no lockfile, so the first install resolves and
+  # writes uv.lock. Commit that lock, then switch to `uv sync --frozen` for reproducible installs.
+  - { key: runtime.install_cmd, type: string, value: "uv sync" }
+
+owns:
+  - "pyproject.toml"
+  - ".python-version"
+  - ".gitignore"
+
+injection_points:
+  - id: runtime.dependencies
+    file: pyproject.toml
+    format: toml-array
+    anchor: "[project].dependencies"
+    order: alpha
