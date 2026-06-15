@@ -20,7 +20,12 @@ without the engine learning either stack. Both slices now have a byte-exact gold
 against `tests/golden/` — the concrete form of the docs/01 §6 and docs/02 §7 render proofs. The CLI
 entry point now has its own smoke test (`tests/test_cli_smoke.py`) driving `initree new` over both
 real recipes into a temp dir with no fixtures — the slice tests call `build()` directly, this proves
-the production binary path. Next are the release tasks.
+the production binary path. The release work is now in: the wheel bundles its layers and the registry
+so an installed `initree` runs from any cwd (proven by installing into a clean venv and building both
+recipes), the package carries an MIT license and full PyPI metadata at `0.1.0`, CI runs ruff +
+pyright + pytest on every PR, and a release workflow publishes to PyPI on a `v*` tag via Trusted
+Publishing. The one remaining step is owner-only: configure the trusted publisher on PyPI, then push
+`v0.1.0` to cut the first release.
 
 ## Foundations
 
@@ -74,6 +79,8 @@ the production binary path. Next are the release tasks.
 
 ## Release
 
-32. [ ] README usage on real recipes + a layer-authoring guide
-33. [ ] Repo CI — ruff + pyright + pytest on every PR
-34. [ ] Package and publish to PyPI (bump version off `0.0.0`)
+32. [x] README usage on real recipes + a layer-authoring guide (`docs/04`)
+33. [x] Repo CI — ruff + pyright + pytest on every PR (`.github/workflows/ci.yml`)
+34. [x] Package for PyPI — self-contained wheel, MIT license, metadata, version `0.1.0`, and a
+        Trusted-Publishing release workflow. First publish is one `git tag v0.1.0` away once the PyPI
+        trusted publisher is configured (owner-only).
