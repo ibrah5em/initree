@@ -10,10 +10,18 @@ from pathlib import Path
 
 from typer.testing import CliRunner
 
+from initree import __version__
 from initree.cli import app
 
 FIXTURES = Path(__file__).parent / "fixtures"
 runner = CliRunner()
+
+
+def test_version_flag_prints_version_and_exits():
+    result = runner.invoke(app, ["--version"])
+
+    assert result.exit_code == 0
+    assert __version__ in result.output
 
 
 def test_new_scaffolds_a_project_end_to_end(tmp_path):
