@@ -9,6 +9,7 @@ inputs:
   - { key: deploy.vps.host, prompt: "VPS host (user@ip)", type: string, default: "deploy@example.com" }
 
 consumes:
+  - { key: container.runtime, required: true }           # pull/run with the tool the container slot chose
   - { key: container.image_name, required: true }
   - { key: container.exposed_port, required: true }      # the port, two hops from fastapi
   - { key: registry.image_name_base, required: true }
@@ -22,7 +23,7 @@ provides:
   - key: deploy.apply_recipe
     type: recipe
     value:
-      - 'ssh ${deploy.vps.host} "docker pull {{IMAGE}} && docker run -d --restart=always
+      - 'ssh ${deploy.vps.host} "${container.runtime} pull {{IMAGE}} && ${container.runtime} run -d --restart=always
         --name ${container.image_name} -p 80:${container.exposed_port} {{IMAGE}}"'
 
 owns:
