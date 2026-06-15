@@ -61,6 +61,10 @@ include = ["src/initree", "layers", ".claude/skills/capability-registry/capabili
 [tool.ruff]
 line-length = 100
 src = ["src", "tests"]
+# golden/ holds emitted projects we lock byte-for-byte; layers/*/templates hold ${...}/{{...}}
+# placeholders that aren't valid Python or TOML. Neither is our source — keep ruff (and its cache)
+# out of both, or `ruff check tests` would rewrite a fixture and a template would fail to parse.
+extend-exclude = ["tests/golden", "layers/*/templates"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
@@ -77,5 +81,8 @@ addopts = "--ignore=tests/golden"
 
 [tool.pyright]
 include = ["src", "tests"]
+# Same reason as ruff's exclude: the golden snapshots are scaffolded projects (they import fastapi
+# etc., which aren't our deps), not code we type-check.
+exclude = ["tests/golden", "**/__pycache__", "**/node_modules", "**/.*"]
 pythonVersion = "3.12"
 typeCheckingMode = "standard"
