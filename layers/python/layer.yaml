@@ -15,6 +15,17 @@ provides:
   # writes uv.lock. Commit that lock, then switch to `uv sync --frozen` for reproducible installs.
   - { key: runtime.install_cmd, type: string, value: "uv sync" }
   - { key: runtime.test_cmd, type: string, value: "uv run pytest" }
+  # Image-prep the container splices verbatim into a single-stage build (docs/registry §5). Kept
+  # here, not in the container layer, so swapping the language never edits the container: fetch the
+  # uv binary and put the venv on PATH so the app entrypoint resolves.
+  - key: runtime.image_prep
+    type: string
+    value: |-
+      # Dependencies install into /app/.venv; putting it on PATH makes the app entrypoint runnable.
+      ENV PATH="/app/.venv/bin:$PATH"
+
+      # uv drives dependency resolution; copy the static binary from its official image.
+      COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 owns:
   - "pyproject.toml"

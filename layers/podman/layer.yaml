@@ -18,6 +18,7 @@ consumes:
   - { key: runtime.build_cmd, required: false }      # compiled langs only; absent for python
   - { key: runtime.artifact, required: false }
   - { key: runtime.run_base_image, required: false }
+  - { key: runtime.image_prep, required: false }     # single-stage langs only; the language's own setup
 
 provides:
   - { key: container.runtime, type: string, value: "podman" }

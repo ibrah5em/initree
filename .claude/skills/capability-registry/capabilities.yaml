@@ -32,6 +32,7 @@ keys:
   - { key: runtime.run_base_image, type: string, owner: language, conformance: MAY }
   - { key: runtime.build_cmd,      type: string, owner: language, conformance: MAY }
   - { key: runtime.artifact,       type: string, owner: language, conformance: MAY }
+  - { key: runtime.image_prep,     type: string, owner: language, conformance: MAY }
 
   # framework
   - { key: app.port,             type: int,    owner: framework, conformance: MUST }
