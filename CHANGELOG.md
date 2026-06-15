@@ -8,6 +8,7 @@ All notable changes to this project are recorded here. The format follows
 
 ### Added
 
+- `initree list` shows the available layers grouped by slot.
 - `initree --version` prints the installed version.
 
 ### Changed

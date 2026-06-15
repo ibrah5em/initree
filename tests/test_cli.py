@@ -24,6 +24,17 @@ def test_version_flag_prints_version_and_exits():
     assert __version__ in result.output
 
 
+def test_list_groups_available_layers_by_slot():
+    result = runner.invoke(app, ["list", "--layers-dir", str(FIXTURES / "emit-slice")])
+
+    assert result.exit_code == 0
+    assert "language" in result.output
+    assert "go" in result.output
+    assert "Go module base" in result.output
+    # the slot header precedes the layer it groups (language sorts before framework)
+    assert result.output.index("language") < result.output.index("Gin HTTP service")
+
+
 def test_new_scaffolds_a_project_end_to_end(tmp_path):
     out = tmp_path / "myapp"
     result = runner.invoke(
