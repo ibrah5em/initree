@@ -16,6 +16,7 @@ provides:
   - { key: runtime.base_image, type: string, value: "golang:${runtime.version}" }            # build stage
   - { key: runtime.run_base_image, type: string, value: "gcr.io/distroless/static-debian12" } # final stage
   - { key: runtime.install_cmd, type: string, value: "go mod download" }
+  - { key: runtime.test_cmd, type: string, value: "go test ./..." }
   - { key: runtime.build_cmd, type: string,
       value: "CGO_ENABLED=0 go build -o /out/server ${runtime.go.entrypoint}" }
   - { key: runtime.artifact, type: string, value: "/out/server" }

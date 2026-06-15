@@ -21,10 +21,8 @@ deploy:
   image: bitnami/kubectl:latest
   script:
     - cd k8s && kustomize edit set image app=ghcr.io/your-org/myapp:$CI_COMMIT_SHA && cd ..
-    - kubectl apply -k k8s/ -n default
-    - kubectl rollout status deployment/myapp -n default
-  variables:
-    KUBECONFIG: $KUBE_CONFIG
+    - kubectl --kubeconfig $KUBECONFIG apply -k k8s/ -n default
+    - kubectl --kubeconfig $KUBECONFIG rollout status deployment/myapp -n default
 
 notify:
   stage: notify

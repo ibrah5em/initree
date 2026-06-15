@@ -41,6 +41,27 @@ GITHUB = Dialect(
 STEP_INDENT = " " * 6  # `- name:` under jobs.<job>.steps
 RUN_INDENT = " " * 10  # lines inside a `run: |` block scalar
 
+# Toolchain setup per language, as GitHub Actions steps. The ubuntu-latest runner ships neither uv
+# nor a pinned Go, so each language brings its native setup action. Keyed on the neutral
+# runtime.language so the test job composes with any language the assembler knows — the test command
+# itself comes from runtime.test_cmd, never hardcoded here.
+TEST_SETUP = {
+    "python": ["- uses: astral-sh/setup-uv@v3"],
+    "go": ["- uses: actions/setup-go@v5", "  with:", "    go-version-file: go.mod"],
+}
+
+
+def _test_steps() -> str:
+    """The test job steps: language toolchain setup, then the install and test commands as plain
+    `run:` steps (the commands the language layer provides carry no {{TOKEN}}s)."""
+    language = os.environ.get("INITREE_RUNTIME_LANGUAGE", "")
+    lines = [
+        *TEST_SETUP.get(language, []),
+        f"- run: {os.environ['INITREE_RUNTIME_INSTALL_CMD']}",
+        f"- run: {os.environ['INITREE_RUNTIME_TEST_CMD']}",
+    ]
+    return "\n".join(f"{STEP_INDENT}{line}" for line in lines)
+
 
 def _recipe(env_key: str) -> list[str]:
     """A recipe the engine exported as INITREE_<KEY> JSON, or [] when the key is absent."""
@@ -69,6 +90,7 @@ def main() -> None:
     print(
         json.dumps(
             {
+                "ci.gh_actions.test_steps": _test_steps(),
                 "ci.gh_actions.build_steps": _run_step("Build and push image", build),
                 "ci.gh_actions.deploy_steps": "\n".join(deploy_steps),
             }

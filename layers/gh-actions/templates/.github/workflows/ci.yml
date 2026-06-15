@@ -10,9 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: ${runtime.install_cmd}
-      - run: uv run pytest
+${ci.gh_actions.test_steps}
 
   build:
     needs: test

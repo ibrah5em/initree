@@ -45,6 +45,23 @@ GITLAB = Dialect(
 
 SCRIPT_INDENT = " " * 4  # `- ` items under a job's `script:`
 
+# Toolchain bootstrap per language, run inside `image: ${runtime.base_image}`. The golang image
+# already carries the toolchain (no setup); python:slim ships pip but not uv, so it self-installs
+# first. Keyed on the neutral runtime.language so the test job composes with any language the
+# assembler knows — the test command itself comes from runtime.test_cmd, never hardcoded here.
+TEST_SETUP = {"python": ["pip install uv"], "go": []}
+
+
+def _test_commands() -> list[str]:
+    """The test job's script: language toolchain setup, then the install and test commands the
+    language layer provides. Plain shell (no {{TOKEN}}s), so it needs no dialect render."""
+    language = os.environ.get("INITREE_RUNTIME_LANGUAGE", "")
+    return [
+        *TEST_SETUP.get(language, []),
+        os.environ["INITREE_RUNTIME_INSTALL_CMD"],
+        os.environ["INITREE_RUNTIME_TEST_CMD"],
+    ]
+
 
 def _recipe(env_key: str) -> list[str]:
     """A recipe the engine exported as INITREE_<KEY> JSON, or [] when the key is absent."""
@@ -70,6 +87,7 @@ def main() -> None:
     print(
         json.dumps(
             {
+                "ci.gitlab_ci.test_script": _script(_test_commands()),
                 "ci.gitlab_ci.build_script": _script(build),
                 "ci.gitlab_ci.deploy_script": _script(deploy),
                 "ci.gitlab_ci.notify_script": _script(notify),

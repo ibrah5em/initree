@@ -14,6 +14,7 @@ provides:
   # `uv sync` (not --frozen): the scaffold ships no lockfile, so the first install resolves and
   # writes uv.lock. Commit that lock, then switch to `uv sync --frozen` for reproducible installs.
   - { key: runtime.install_cmd, type: string, value: "uv sync" }
+  - { key: runtime.test_cmd, type: string, value: "uv run pytest" }
 
 owns:
   - "pyproject.toml"

@@ -4,8 +4,7 @@ test:
   stage: test
   image: ${runtime.base_image}
   script:
-    - ${runtime.install_cmd}
-    - go test ./...
+${ci.gitlab_ci.test_script}
 
 build_image:
   stage: build
@@ -16,11 +15,11 @@ ${ci.gitlab_ci.build_script}
 
 deploy:
   stage: deploy
-  image: bitnami/kubectl:latest
+# initree:if deploy.runtime_image
+  image: ${deploy.runtime_image}
+# initree:endif
   script:
 ${ci.gitlab_ci.deploy_script}
-  variables:
-    KUBECONFIG: $KUBE_CONFIG
 
 # initree:if notify.send_recipe
 notify:

@@ -88,7 +88,8 @@ def test_ci_layer_renders_recipes_into_gitlab_native_tokens(tmp_path):
         "cd k8s && kustomize edit set image app=ghcr.io/your-org/myapp:$CI_COMMIT_SHA && cd .."
         in pipeline
     )
-    assert "kubectl apply -k k8s/ -n default" in pipeline
+    # the kubeconfig file-token resolves to GitLab's file-variable convention ($KUBECONFIG)
+    assert "kubectl --kubeconfig $KUBECONFIG apply -k k8s/ -n default" in pipeline
     # no engine/deferred token survives the ci render (GitLab's own $VARs are fine)
     assert "{{IMAGE}}" not in pipeline
     assert "{{SECRET" not in pipeline
@@ -101,7 +102,18 @@ def test_gitlab_pipeline_is_well_formed_with_the_expected_stages(tmp_path):
     assert pipeline["stages"] == ["test", "build", "deploy", "notify"]
     assert pipeline["test"]["image"] == "golang:1.22"
     assert pipeline["build_image"]["stage"] == "build"
-    assert pipeline["deploy"]["variables"]["KUBECONFIG"] == "$KUBE_CONFIG"
+    # the deploy job's image comes from the deploy layer (deploy.runtime_image), not a ci hardcode;
+    # the kubeconfig rides the recipe as a token, so there's no leftover hardcoded variables block.
+    assert pipeline["deploy"]["image"] == "bitnami/kubectl:latest"
+    assert "variables" not in pipeline["deploy"]
+
+
+def test_test_job_is_rendered_from_language_capabilities(tmp_path):
+    _, out = _build(tmp_path)
+    # the test job is no longer hardcoded per language: image + script come from runtime.* keys.
+    # go's image already carries the toolchain, so there's no setup step — just install then test.
+    pipeline = _yaml(out / ".gitlab-ci.yml")
+    assert pipeline["test"]["script"] == ["go mod download", "go test ./..."]
 
 
 def test_optional_notify_renders_a_job_from_the_slack_recipe(tmp_path):
@@ -123,6 +135,9 @@ def test_secret_purposes_are_compiled_from_the_recipes(tmp_path):
     assert "`registry`" in report
     assert "`registry_user`" in report
     assert "`slack_webhook`" in report
+    # the kubeconfig file-token in the k8s deploy recipe lands in the checklist under file-type vars
+    assert "`kubeconfig`" in report
+    assert "## File-type variables" in report
 
 
 def test_docker_is_the_same_manifest_that_serves_slice_1(tmp_path):

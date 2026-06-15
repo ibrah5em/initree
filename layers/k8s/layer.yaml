@@ -26,13 +26,18 @@ provides:
   # the default (no host) must be "", not "https://" with a dangling scheme (#43). The ${...} tier
   # has no conditional, so a compute hook resolves it (vps-ssh provides "" the same way, declaratively).
   - { key: deploy.url, type: string, value: ":hook" }
-  # {{IMAGE}} stays deferred for the ci layer; ${...} is concrete after compute.
+  # The ci deploy job must run in an image carrying kubectl + kustomize; that's a deploy fact, not a
+  # ci one, so it travels as a capability the ci layer reads for the job image (docs/03 §8).
+  - { key: deploy.runtime_image, type: string, value: "bitnami/kubectl:latest" }
+  # {{IMAGE}} and {{SECRET_FILE:kubeconfig}} stay deferred for the ci layer; ${...} is concrete after
+  # compute. The cluster credential rides the recipe as a file-token so it lands in the secrets
+  # checklist and the ci layer resolves it to its native file-variable — never a hardcoded KUBECONFIG.
   - key: deploy.apply_recipe
     type: recipe
     value:
       - "cd k8s && kustomize edit set image app={{IMAGE}} && cd .."
-      - "kubectl apply -k k8s/ -n ${deploy.k8s.namespace}"
-      - "kubectl rollout status deployment/${container.image_name} -n ${deploy.k8s.namespace}"
+      - "kubectl --kubeconfig {{SECRET_FILE:kubeconfig}} apply -k k8s/ -n ${deploy.k8s.namespace}"
+      - "kubectl --kubeconfig {{SECRET_FILE:kubeconfig}} rollout status deployment/${container.image_name} -n ${deploy.k8s.namespace}"
 
 owns:
   - "k8s/**"
