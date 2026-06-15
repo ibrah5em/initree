@@ -225,8 +225,10 @@ owns: []
 ### 3.6 `gitlab-ci` — slot: ci  (the assembler; runs LAST)
 Consumes every backend-agnostic recipe and renders `.gitlab-ci.yml` in GitLab's structure, using
 GitLab-native secret syntax. It does **not** declare injection points for the build/deploy jobs —
-it renders them itself from the consumed recipes. (`gh-actions` differs only in its template and
-its `{{...}}` → native mapping; its `consumes` list is identical.)
+it renders them itself from the consumed recipes. (`gh-actions` consumes the same recipe keys and
+renders the same jobs; it differs in its template, its `{{...}}` → native mapping, and how it sets
+up the test toolchain — setup actions on the runner rather than a container image — so it omits
+`runtime.base_image`/`deploy.runtime_image`.)
 
 ```yaml
 apiVersion: initree.dev/v1
@@ -234,10 +236,14 @@ id: gitlab-ci
 slot: ci
 name: GitLab CI pipeline
 consumes:
+  - { key: runtime.base_image, required: true }          # test job image
+  - { key: runtime.language, required: true }            # test job: picks the native toolchain setup
   - { key: runtime.install_cmd, required: true }         # test job
+  - { key: runtime.test_cmd, required: true }            # test job: the suite command, never hardcoded
   - { key: registry.image_name_base, required: true }
   - { key: container.build_recipe, required: true }
   - { key: deploy.apply_recipe, required: true }
+  - { key: deploy.runtime_image, required: false }       # deploy job image when the target needs one
   - { key: notify.send_recipe, required: false }          # optional notify stage
 owns:
   - ".gitlab-ci.yml"
@@ -297,7 +303,7 @@ Provision before first deploy:
   [GitLab CI/CD variables]
     - CI_REGISTRY_USER, CI_REGISTRY_PASSWORD   (purpose: registry login)   <- {{SECRET:registry}}
     - SLACK_WEBHOOK   (file or masked)         (purpose: slack notify)     <- {{SECRET:slack_webhook}}
-    - KUBE_CONFIG     (file-type)              (purpose: cluster access)
+    - KUBECONFIG      (file-type)              (purpose: cluster access)   <- {{SECRET_FILE:kubeconfig}}
   [Kubernetes cluster]
     - secret/regcred  in namespace prod        (purpose: image pull)
       kubectl create secret docker-registry regcred --docker-server=... -n prod
@@ -395,10 +401,10 @@ stages: [test, build, deploy, notify]
 
 test:
   stage: test
-  image: golang:1.22
-  script:
-    - go mod download            # runtime.install_cmd
-    - go test ./...
+  image: golang:1.22              # runtime.base_image
+  script:                         # rendered from runtime.language setup + install_cmd + test_cmd
+    - go mod download            # runtime.install_cmd (go's image already carries the toolchain)
+    - go test ./...              # runtime.test_cmd
 
 build_image:
   stage: build
@@ -411,12 +417,11 @@ build_image:
 
 deploy:
   stage: deploy
-  image: bitnami/kubectl:latest
+  image: bitnami/kubectl:latest  # deploy.runtime_image (the deploy layer's, not a ci hardcode)
   script:                        # rendered from deploy.apply_recipe
     - cd k8s && kustomize edit set image app=registry.gitlab.com/myapp:$CI_COMMIT_SHA && cd ..
-    - kubectl apply -k k8s/ -n prod                       # deploy.k8s.namespace
-    - kubectl rollout status deployment/myapp -n prod
-  variables: { KUBECONFIG: $KUBE_CONFIG }                 # file-type CI variable
+    - kubectl --kubeconfig $KUBECONFIG apply -k k8s/ -n prod          # {{SECRET_FILE:kubeconfig}}
+    - kubectl --kubeconfig $KUBECONFIG rollout status deployment/myapp -n prod
 
 notify:
   stage: notify

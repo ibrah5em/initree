@@ -9,6 +9,8 @@ docs/01 §6, adapted to the recipe-based contract (docs/03).
 
 from pathlib import Path
 
+from ruamel.yaml import YAML
+
 from initree.lifecycle import build, engine_seed
 from initree.manifest import load_selected
 from initree.prompt import defaults
@@ -59,6 +61,17 @@ def test_ci_layer_renders_recipes_into_github_native_tokens(tmp_path):
     assert "{{IMAGE}}" not in workflow
     assert "{{SECRET" not in workflow
     assert "{{SHA}}" not in workflow
+
+
+def test_test_job_is_rendered_from_language_capabilities(tmp_path):
+    _, out = _build(tmp_path)
+    # the test job is no longer hardcoded per language: the ci layer picks python's native toolchain
+    # setup (setup-uv) from runtime.language, then runs runtime.install_cmd and runtime.test_cmd.
+    workflow = YAML(typ="safe").load((out / ".github/workflows/ci.yml").read_text())
+    steps = workflow["jobs"]["test"]["steps"]
+    assert {"uses": "astral-sh/setup-uv@v3"} in steps
+    assert {"run": "uv sync"} in steps
+    assert {"run": "uv run pytest"} in steps
 
 
 def test_deploy_script_is_owned_rendered_and_executable(tmp_path):

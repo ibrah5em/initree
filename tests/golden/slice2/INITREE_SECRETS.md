@@ -10,3 +10,7 @@ themselves never live in the generated project.
 - `registry` — registry password/token (push)
 - `registry_user` — registry username (push)
 - `slack_webhook` — slack incoming webhook url
+
+## File-type variables
+
+- `kubeconfig` — cluster credentials (file) -> use {{SECRET_FILE:kubeconfig}}

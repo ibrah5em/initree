@@ -94,6 +94,7 @@ layers (§9).
 | `runtime.version` | string | MUST | language version | `3.12` / `1.22` |
 | `runtime.base_image` | string | MUST | OCI image for build (and run, if single-stage) | `python:3.12-slim` / `golang:1.22` |
 | `runtime.install_cmd` | string | MUST | command that fetches dependencies | `uv sync --frozen` / `go mod download` |
+| `runtime.test_cmd` | string | SHOULD | command that runs the test suite; the ci layer renders the test job from it | `uv run pytest` / `go test ./...` |
 | `runtime.run_base_image` | string | MAY | final-stage image for compiled languages | `gcr.io/distroless/static-debian12` |
 | `runtime.build_cmd` | string | MAY | compile step (compiled languages only) | `CGO_ENABLED=0 go build -o /out/server ...` |
 | `runtime.artifact` | string | MAY | built artifact path (compiled languages only) | `/out/server` |
@@ -162,6 +163,7 @@ recipes from the other slots and is the sole resolver of `{{...}}` tokens.
 | `deploy.summary` | string | MUST | one-line human description; the **only** channel through which backend internals surface to others | `kubernetes · ns/prod · 2 replicas` |
 | `deploy.apply_recipe` | recipe | MUST | backend-agnostic deploy commands (tokens allowed) | `[ 'kubectl apply -k k8s/ -n prod', ... ]` |
 | `deploy.url` | string | SHOULD | live URL if known (may be empty) | `https://app.example.com` |
+| `deploy.runtime_image` | string | MAY | OCI image the ci deploy job must run in (e.g. one carrying the deploy CLI); omitted when the ci runner already has the tools | `bitnami/kubectl:latest` |
 
 ### `notify.*` — provided by the **notify** slot (optional slot)
 | key | type | conformance | description | example |
@@ -238,8 +240,9 @@ contract**. They MUST NOT be consumed by other layers.
 ## 13. Per-slot conformance summary (the author checklist)
 
 **language** — MUST provide `runtime.language`, `runtime.version`, `runtime.base_image`,
-`runtime.install_cmd`. MAY provide `runtime.run_base_image`, `runtime.build_cmd`, `runtime.artifact`.
-SHOULD own its dependency manifest and declare the `runtime.dependencies` injection point.
+`runtime.install_cmd`. SHOULD provide `runtime.test_cmd`. MAY provide `runtime.run_base_image`,
+`runtime.build_cmd`, `runtime.artifact`. SHOULD own its dependency manifest and declare the
+`runtime.dependencies` injection point.
 
 **framework** — MUST provide `app.port`, `app.start_command`. SHOULD provide `app.healthcheck_path`.
 MUST `require` a language slot (with `one_of` if it only supports some). Typically injects into
@@ -252,11 +255,14 @@ MUST `require` a language slot (with `one_of` if it only supports some). Typical
 
 **ci** — MUST provide `ci.provider`. MUST own its pipeline file and be the sole resolver of `{{...}}`
 tokens. MUST consume `container.build_recipe`, `deploy.apply_recipe`, `registry.image_name_base`,
-`runtime.install_cmd`. SHOULD consume `notify.send_recipe` (optional). Runs last in topological order.
+`runtime.language`, `runtime.install_cmd`, `runtime.test_cmd`. SHOULD consume `notify.send_recipe`
+(optional). MAY consume `deploy.runtime_image` to set the deploy job's image. Renders the test job
+from `runtime.test_cmd` and the language's native toolchain setup — never hardcoding either. Runs
+last in topological order.
 
 **deploy** — MUST provide `deploy.target`, `deploy.summary`, `deploy.apply_recipe`. SHOULD provide
-`deploy.url`. MUST consume `container.exposed_port`, `container.image_name`,
-`registry.image_name_base`. Keeps backend specifics under `deploy.<backend>.*`.
+`deploy.url`. MAY provide `deploy.runtime_image`. MUST consume `container.exposed_port`,
+`container.image_name`, `registry.image_name_base`. Keeps backend specifics under `deploy.<backend>.*`.
 
 **notify** (optional slot) — MUST provide `notify.send_recipe` if present. MAY consume
 `deploy.summary`, `deploy.url`, `project.name`.

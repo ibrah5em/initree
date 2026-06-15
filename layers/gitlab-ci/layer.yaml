@@ -6,10 +6,13 @@ description: The terminal assembler — consumes every layer's recipe and render
 
 consumes:
   - { key: runtime.base_image, required: true }          # test job image
+  - { key: runtime.language, required: true }            # test job: picks the native toolchain setup
   - { key: runtime.install_cmd, required: true }         # test job
+  - { key: runtime.test_cmd, required: true }            # test job: the suite command, never hardcoded
   - { key: registry.image_name_base, required: true }
   - { key: container.build_recipe, required: true }
   - { key: deploy.apply_recipe, required: true }
+  - { key: deploy.runtime_image, required: false }       # deploy job image when the target needs one
   - { key: notify.send_recipe, required: false }         # optional notify stage
 
 provides:
@@ -17,6 +20,7 @@ provides:
   # Backend-private (docs/03 §12): the script lines for each job, rendered from the consumed recipes
   # by the compute hook. Never consumed by another layer — only this layer's own pipeline template
   # references them. ":hook" because only code can resolve the {{TOKEN}}s into GitLab syntax.
+  - { key: ci.gitlab_ci.test_script, type: string, value: ":hook" }
   - { key: ci.gitlab_ci.build_script, type: string, value: ":hook" }
   - { key: ci.gitlab_ci.deploy_script, type: string, value: ":hook" }
   - { key: ci.gitlab_ci.notify_script, type: string, value: ":hook" }

@@ -29,8 +29,8 @@ reference with examples is `docs/03-capability-registry-v1.md`; the machine-read
 ## Keys (conformance is for the owning slot)
 
 **runtime.*** (language): `runtime.language` MUST, `runtime.version` MUST, `runtime.base_image` MUST,
-`runtime.install_cmd` MUST, `runtime.run_base_image` MAY, `runtime.build_cmd` MAY,
-`runtime.artifact` MAY.
+`runtime.install_cmd` MUST, `runtime.test_cmd` SHOULD, `runtime.run_base_image` MAY,
+`runtime.build_cmd` MAY, `runtime.artifact` MAY.
 
 **app.*** (framework): `app.port` (int) MUST, `app.start_command` MUST, `app.healthcheck_path` SHOULD.
 Framework-internal module/entrypoint paths are PRIVATE inputs, not shared keys.
@@ -42,7 +42,8 @@ Framework-internal module/entrypoint paths are PRIVATE inputs, not shared keys.
 **ci.*** (ci): `ci.provider` MUST. (CI is the terminal assembler; it mostly consumes recipes.)
 
 **deploy.*** (deploy): `deploy.target` MUST, `deploy.summary` MUST, `deploy.apply_recipe` (recipe)
-MUST, `deploy.url` SHOULD. Backend specifics live under `deploy.<backend>.*` (PRIVATE).
+MUST, `deploy.url` SHOULD, `deploy.runtime_image` MAY (the image the ci deploy job runs in). Backend
+specifics live under `deploy.<backend>.*` (PRIVATE).
 
 **notify.*** (notify, optional): `notify.send_recipe` (recipe) MUST-if-present.
 

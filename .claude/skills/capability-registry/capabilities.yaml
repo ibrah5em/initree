@@ -28,6 +28,7 @@ keys:
   - { key: runtime.version,        type: string, owner: language, conformance: MUST }
   - { key: runtime.base_image,     type: string, owner: language, conformance: MUST }
   - { key: runtime.install_cmd,    type: string, owner: language, conformance: MUST }
+  - { key: runtime.test_cmd,       type: string, owner: language, conformance: SHOULD }
   - { key: runtime.run_base_image, type: string, owner: language, conformance: MAY }
   - { key: runtime.build_cmd,      type: string, owner: language, conformance: MAY }
   - { key: runtime.artifact,       type: string, owner: language, conformance: MAY }
@@ -49,10 +50,11 @@ keys:
   - { key: ci.provider, type: string, owner: ci, conformance: MUST }
 
   # deploy
-  - { key: deploy.target,       type: string, owner: deploy, conformance: MUST }
-  - { key: deploy.summary,      type: string, owner: deploy, conformance: MUST }
-  - { key: deploy.apply_recipe, type: recipe, owner: deploy, conformance: MUST }
-  - { key: deploy.url,          type: string, owner: deploy, conformance: SHOULD }
+  - { key: deploy.target,        type: string, owner: deploy, conformance: MUST }
+  - { key: deploy.summary,       type: string, owner: deploy, conformance: MUST }
+  - { key: deploy.apply_recipe,  type: recipe, owner: deploy, conformance: MUST }
+  - { key: deploy.url,           type: string, owner: deploy, conformance: SHOULD }
+  - { key: deploy.runtime_image, type: string, owner: deploy, conformance: MAY }
 
   # notify (optional slot)
   - { key: notify.send_recipe, type: recipe, owner: notify, conformance: MUST_IF_PRESENT }
