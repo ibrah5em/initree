@@ -9,6 +9,7 @@ instead of a traceback.
 from __future__ import annotations
 
 import re
+import tempfile
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, NoReturn
@@ -73,6 +74,9 @@ def new(
     ),
     no_input: bool = typer.Option(False, "--no-input", help="don't prompt; take input defaults"),
     no_finalize: bool = typer.Option(False, "--no-finalize", help="skip finalize hooks"),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="resolve and render the recipe, report the plan, write nothing"
+    ),
 ) -> None:
     """Scaffold a new project from a recipe."""
     ids = [part for part in recipe.split("+") if part]
@@ -81,13 +85,23 @@ def new(
 
     preset = _parse_overrides(overrides)
     destination = (out_dir or Path.cwd() / slugify(name)).resolve()
-    _guard_destination(destination)
+    if not dry_run:
+        _guard_destination(destination)
 
+    # The bus is seeded with the real destination either way, so a dry run's rendered content
+    # matches a real build; only where the files land differs.
     seed = {**engine_seed(name, destination), **preset}
     ask = _make_asker(preset, interactive=not no_input)
 
     try:
         layers = load_selected(layers_dir or resources.layers_dir(), ids)
+        if dry_run:
+            # Render into a throwaway dir to exercise the real emit (templates, injections,
+            # ownership) without touching the destination, then report and discard it.
+            with tempfile.TemporaryDirectory() as tmp:
+                result = build(layers, seed=seed, ask=ask, out_dir=Path(tmp), run_finalize=False)
+                _report_plan(result, Path(tmp), destination)
+            return
         result = build(
             layers, seed=seed, ask=ask, out_dir=destination, run_finalize=not no_finalize
         )
@@ -191,6 +205,17 @@ def _report(result: BuildResult, destination: Path) -> None:
         typer.echo(f"  secrets: {rel} (provision before first deploy)")
     if result.finalized:
         typer.echo(f"  finalized: {', '.join(result.finalized)}")
+
+
+def _report_plan(result: BuildResult, root: Path, destination: Path) -> None:
+    """Same shape as _report, but for a dry run: paths are relative to the throwaway render dir."""
+    typer.secho(f"would create {destination}", fg=typer.colors.YELLOW)
+    typer.echo(f"  order: {' -> '.join(result.order)}")
+    for path in result.written:
+        typer.echo(f"  + {path.relative_to(root)}")
+    if result.secrets_report is not None:
+        typer.echo(f"  secrets: {result.secrets_report.relative_to(root)}")
+    typer.secho("  dry run — nothing written", fg=typer.colors.YELLOW)
 
 
 def _fail(message: str) -> NoReturn:

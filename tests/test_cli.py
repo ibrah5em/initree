@@ -64,6 +64,70 @@ def test_new_scaffolds_a_project_end_to_end(tmp_path):
     assert "order: go -> gin -> docker" in result.output
 
 
+def test_new_dry_run_reports_the_plan_without_writing(tmp_path):
+    out = tmp_path / "myapp"
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "myapp",
+            "--recipe",
+            "go+gin+docker",
+            "--layers-dir",
+            str(FIXTURES / "emit-slice"),
+            "--out",
+            str(out),
+            "--dry-run",
+            "--no-input",
+            "--set",
+            "runtime.version=1.22",
+            "--set",
+            "app.port=8080",
+            "--set",
+            "app.entrypoint=./cmd/server",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert "would create" in result.output
+    assert "order: go -> gin -> docker" in result.output
+    assert "go.mod" in result.output
+    assert "nothing written" in result.output
+    assert not out.exists()
+
+
+def test_new_dry_run_leaves_an_occupied_destination_untouched(tmp_path):
+    out = tmp_path / "occupied"
+    out.mkdir()
+    (out / "keep.txt").write_text("do not touch")
+
+    result = runner.invoke(
+        app,
+        [
+            "new",
+            "myapp",
+            "--recipe",
+            "go+gin+docker",
+            "--layers-dir",
+            str(FIXTURES / "emit-slice"),
+            "--out",
+            str(out),
+            "--dry-run",
+            "--no-input",
+            "--set",
+            "runtime.version=1.22",
+            "--set",
+            "app.port=8080",
+            "--set",
+            "app.entrypoint=./cmd/server",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert (out / "keep.txt").read_text() == "do not touch"
+    assert not (out / "go.mod").exists()
+
+
 def test_new_fails_clearly_on_a_missing_layer(tmp_path):
     result = runner.invoke(
         app,
