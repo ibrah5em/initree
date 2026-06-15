@@ -88,8 +88,8 @@ Ten layers ship across the six slots: `python`/`go` (language), `fastapi`/`gin` 
 `docker` (container), `gh-actions`/`gitlab-ci` (ci), `vps-ssh`/`k8s` (deploy), `slack` (notify). Two
 reference recipes are locked byte-for-byte by golden tests:
 `python+fastapi+docker+gh-actions+vps-ssh` (slice 1) and `go+gin+docker+gitlab-ci+k8s+slack`
-(slice 2 — the generalization proof). New work is tracked in `docs/tasks.md`; keep the TDD habit, a
-new engine behaviour gets a fixture or slice test that fails first.
+(slice 2 — the generalization proof). What's next is in `docs/roadmap.md`; keep the TDD habit, a new
+engine behaviour gets a fixture or slice test that fails first.
 
 ---
 
@@ -114,7 +114,7 @@ Python, with:
 ```
 initree/
 ├── CLAUDE.md
-├── docs/                      # the locked contract (source of truth) + tasks.md
+├── docs/                      # the locked contract (source of truth) + roadmap.md
 ├── .claude/                   # agents + skills + rules (see below)
 ├── src/initree/
 │   ├── manifest.py            # pydantic models for layer.yaml + recipe loaders
