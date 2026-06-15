@@ -1,0 +1,33 @@
+apiVersion: initree.dev/v1
+id: node
+slot: language
+name: Node.js project base
+description: Owns package.json and the dependency injection point frameworks add to (json-array).
+
+inputs:
+  - { key: runtime.version, prompt: "Node.js major version", type: string, default: "20" }
+
+provides:
+  - { key: runtime.language, type: string, value: "node" }
+  - { key: runtime.version, type: string, value: "${runtime.version}" }
+  - { key: runtime.base_image, type: string, value: "node:${runtime.version}-slim" }
+  # package.json carries deps as an array of npm specifiers — the json parallel to python's pyproject
+  # array. npm wants an object, so install reads the array and installs from it; npm then rewrites
+  # `dependencies` into the standard object form and writes package-lock.json on first run.
+  - { key: runtime.install_cmd, type: string, value: "npm install $(node -p \"require('./package.json').dependencies.join(' ')\")" }
+  - { key: runtime.test_cmd, type: string, value: "npm test" }
+  # The container splices this into the single-stage build (docs/registry §5). The node base image
+  # already ships node + npm, so there is nothing to fetch — a comment documents that in the image.
+  - { key: runtime.image_prep, type: string, value: "# The node base image ships node and npm — no extra prep needed." }
+
+owns:
+  - "package.json"
+  - ".nvmrc"
+  - ".gitignore"
+
+injection_points:
+  - id: runtime.dependencies
+    file: package.json
+    format: json-array
+    anchor: "dependencies"
+    order: alpha
