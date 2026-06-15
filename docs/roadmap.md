@@ -17,7 +17,8 @@ The engine and the first ten layers, on PyPI.
 ## Now — toward 0.2.0
 
 - [x] Repo hygiene — refreshed `CLAUDE.md`, added `CHANGELOG.md`, `CONTRIBUTING.md`, issue templates.
-- [ ] Docs restructure — descriptive filenames + an index, then an mkdocs site on GitHub Pages.
+- [x] Docs restructure — descriptive filenames + an index, and an mkdocs site at
+      [ibrah5em.github.io/initree](https://ibrah5em.github.io/initree/).
 - [ ] Engine introspection — `initree list` (what slots and layers exist), `initree plan <recipe>` /
       `--dry-run` (prove buildability and preview the tree without writing), a `--version` flag, and
       sharper `resolve` errors (nearest-match on an unknown layer id, name the missing capability).

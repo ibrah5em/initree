@@ -4,6 +4,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/initree.svg)](https://pypi.org/project/initree/)
 [![CI](https://github.com/ibrah5em/initree/actions/workflows/ci.yml/badge.svg)](https://github.com/ibrah5em/initree/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-initree-blue.svg)](https://ibrah5em.github.io/initree/)
 
 **Compose a project from layers, not from templates.**
 
@@ -126,7 +127,8 @@ adds to a file is through a named injection point the owner declares (a dependen
 `pyproject.toml`, a step in a CI workflow). And **a layer binds to a capability, never to a tool** —
 there is no `docker.*` on the shared bus, only `container.*`. That is what makes a slot swappable.
 
-The full contract is the source of truth, locked at v1:
+The full contract is the source of truth, locked at v1. Read it as a site at
+[ibrah5em.github.io/initree](https://ibrah5em.github.io/initree/), or in the repo:
 
 - [`docs/lifecycle.md`](docs/lifecycle.md) — the manifest schema and lifecycle, worked through one slice
 - [`docs/generalization.md`](docs/generalization.md) — the same engine across two unrelated stacks, and why the graph stays acyclic
