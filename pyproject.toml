@@ -42,6 +42,9 @@ extend-immutable-calls = ["typer.Option", "typer.Argument"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# golden/ holds byte-exact snapshots of emitted projects, including their own test files
+# (e.g. a scaffolded tests/test_health.py). Those are fixtures, not our suite — don't collect them.
+addopts = "--ignore=tests/golden"
 
 [tool.pyright]
 include = ["src", "tests"]
