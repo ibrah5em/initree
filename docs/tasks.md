@@ -15,8 +15,10 @@ namespaced deploy target, and an optional notify slot, all through the same engi
 docker manifest (`tests/test_slice1.py` and `tests/test_slice2.py` prove each end to end). The one
 engine addition slice 2 needed was a backend-branching template conditional (`initree:if` in
 `emit`), so docker's single owned Dockerfile renders multi-stage for go and single-stage for python
-without the engine learning either stack. Next are the byte-exact golden tests against the docs/01
-§6 and docs/02 §7 renders, then the release tasks.
+without the engine learning either stack. Slice 1 now has a byte-exact golden test
+(`tests/test_golden_slice1.py`) locking its whole emitted tree against `tests/golden/slice1/` —
+the concrete form of the docs/01 §6 render proof. Next are the slice-2 golden (docs/02 §7) and the
+CLI smoke test, then the release tasks.
 
 ## Foundations
 
@@ -64,7 +66,7 @@ without the engine learning either stack. Next are the byte-exact golden tests a
 
 ## End-to-end proof
 
-29. [ ] Golden test: slice 1 builds and matches the rendered output in `docs/01` §6
+29. [x] Golden test: slice 1 builds and matches the rendered output in `docs/01` §6
 30. [ ] Golden test: slice 2 builds and matches the rendered output in `docs/02` §7
 31. [ ] CLI smoke test: `initree new` into a temp dir on a real recipe, no fixtures
 
