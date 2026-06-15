@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm install $(node -p "require('./package.json').dependencies.join(' ')")
+      - run: npm test
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and push image
+        run: |
+          docker login ghcr.io -u ${{ secrets.REGISTRY_USER }} -p ${{ secrets.REGISTRY }}
+          docker build -t ghcr.io/your-org/myapp:${{ github.sha }} .
+          docker push ghcr.io/your-org/myapp:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        run: |
+          ssh deploy@example.com "docker pull ghcr.io/your-org/myapp:${{ github.sha }} && docker run -d --restart=always --name myapp -p 80:3000 ghcr.io/your-org/myapp:${{ github.sha }}"

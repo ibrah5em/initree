@@ -45,11 +45,11 @@ GITLAB = Dialect(
 
 SCRIPT_INDENT = " " * 4  # `- ` items under a job's `script:`
 
-# Toolchain bootstrap per language, run inside `image: ${runtime.base_image}`. The golang image
-# already carries the toolchain (no setup); python:slim ships pip but not uv, so it self-installs
-# first. Keyed on the neutral runtime.language so the test job composes with any language the
-# assembler knows — the test command itself comes from runtime.test_cmd, never hardcoded here.
-TEST_SETUP = {"python": ["pip install uv"], "go": []}
+# Toolchain bootstrap per language, run inside `image: ${runtime.base_image}`. The golang and node
+# images already carry their toolchain (no setup); python:slim ships pip but not uv, so it self-
+# installs first. Keyed on the neutral runtime.language so the test job composes with any language
+# the assembler knows — the test command itself comes from runtime.test_cmd, never hardcoded here.
+TEST_SETUP = {"python": ["pip install uv"], "go": [], "node": []}
 
 
 def _test_commands() -> list[str]:

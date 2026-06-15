@@ -48,6 +48,7 @@ RUN_INDENT = " " * 10  # lines inside a `run: |` block scalar
 TEST_SETUP = {
     "python": ["- uses: astral-sh/setup-uv@v3"],
     "go": ["- uses: actions/setup-go@v5", "  with:", "    go-version-file: go.mod"],
+    "node": ["- uses: actions/setup-node@v4", "  with:", "    node-version-file: .nvmrc"],
 }
 
 

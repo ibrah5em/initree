@@ -1,0 +1,30 @@
+apiVersion: initree.dev/v1
+id: express
+slot: framework
+name: Express service
+description: Produces the same app.* contract fastapi/gin do, and adds its dependency to package.json (json-array).
+
+requires:
+  slots:
+    - { slot: language, one_of: [node] }
+
+inputs:
+  - { key: app.port, prompt: "App port", type: int, default: 3000 }
+
+consumes:
+  - { key: runtime.language, required: true }
+
+provides:
+  - { key: app.port, type: int, value: "${app.port}" }
+  - { key: app.start_command, type: string, value: "node src/index.js" }
+  - { key: app.healthcheck_path, type: string, value: "/health" }
+
+owns:
+  - "src/**"
+  - "test/**"
+
+injects:
+  - into: runtime.dependencies
+    format: json-array
+    items:
+      - "express@^4.18.2"
