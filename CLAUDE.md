@@ -8,7 +8,7 @@ killed every "universal scaffolder" before it.
 
 ```
 initree new myapp --recipe python+fastapi+docker+gh-actions+vps-ssh
-initree new myapp --recipe go+gin+gitlab-ci+docker+k8s+slack
+initree new myapp --recipe go+gin+docker+gitlab-ci+k8s+slack
 ```
 
 Same primitives, recompose the recipe. A consumer binds to a **capability key**
@@ -69,58 +69,70 @@ vocabulary: `docs/03-capability-registry-v1.md`.
 
 ---
 
-## Current state & build order
+## Current state
 
-- **Contract: locked at v1.** The three docs in `docs/` are the source of truth.
-- **Engine: not built yet.** This is the work. Build in this order, TDD against fixtures:
-  1. **`resolve`** first — the manifest loader + the four static checks + topological order. It must
-     *reject* the failing fixtures (cycle, owns-overlap, missing provider, recipe missing a required
-     container) and *accept* the full recipe with order `go→gin→docker→k8s→slack→ci`.
-  2. **`compute`** — context resolution with `${...}` interpolation (cycle-safe over key refs).
-  3. **`emit`** — template render + injection splicing (single-ownership enforced).
-  4. **`finalize`** — hooks.
+- **Contract: locked at v1.** The docs in `docs/` are the source of truth.
+- **Engine: built and shipped.** `initree` is on PyPI at `0.1.0`. All five lifecycle phases run end
+  to end, and both reference recipes build for real from the layers under `layers/`.
 
-The `resolve` checks map almost line-for-line onto the registry: §3 ownership, §13 per-slot
-conformance, §11 injection-point ids. Load the registry as **data**
-(`.claude/skills/capability-registry/capabilities.yaml`) rather than hardcoding it, so the vocabulary
-stays the single source of truth.
+The phases live in `src/initree/`: `resolve` (the four static checks + topological order), `compute`
+(the capability bus + `${...}` resolution, then freeze), `emit` (template render + injection
+splicing), `prompt`, and `finalize`, orchestrated by `lifecycle.py` behind the `cli.py` entry point.
+Recipe rendering and `{{TOKEN}}` resolution are in `recipe.py`; secret-purpose collection in
+`secrets.py`. The capability registry is loaded as **data**
+(`.claude/skills/capability-registry/capabilities.yaml`), not hardcoded, so the vocabulary stays the
+single source of truth — the `resolve` checks map line-for-line onto it (§3 ownership, §13 per-slot
+conformance, §11 injection-point ids).
+
+Ten layers ship across the six slots: `python`/`go` (language), `fastapi`/`gin` (framework),
+`docker` (container), `gh-actions`/`gitlab-ci` (ci), `vps-ssh`/`k8s` (deploy), `slack` (notify). Two
+reference recipes are locked byte-for-byte by golden tests:
+`python+fastapi+docker+gh-actions+vps-ssh` (slice 1) and `go+gin+docker+gitlab-ci+k8s+slack`
+(slice 2 — the generalization proof). New work is tracked in `docs/tasks.md`; keep the TDD habit, a
+new engine behaviour gets a fixture or slice test that fails first.
 
 ---
 
-## Engine stack (recommended; override if you prefer Go/Rust — the contract is language-agnostic)
+## Engine stack
 
-Python is the best fit for a validate-and-template engine and is the chosen implementation language:
+Python, with:
 
-- **pydantic v2** — the `layer.yaml` schema + validation with precise, user-facing errors (exactly
-  what `resolve` needs to reject bad layers clearly).
+- **pydantic v2** — the `layer.yaml` schema + validation with precise, user-facing errors (what
+  `resolve` needs to reject bad layers clearly).
 - **`graphlib.TopologicalSorter`** (stdlib) — topological order *and* `CycleError` (catches the
   `docker↔ci` cycle for free).
-- **jinja2** (or a small custom resolver) — `${...}` context interpolation. Keys are flat, so a
-  regex resolver with ref-cycle detection is also viable.
+- **jinja2** — template rendering in `emit`. `${...}` context interpolation is a small custom flat
+  resolver in `context.py` (regex + ref-cycle detection), not jinja.
 - **tomlkit** — `toml-array` injection that preserves formatting/comments (e.g. `pyproject.toml`).
 - **ruamel.yaml** — round-trip `yaml-seq` injection.
-- **typer**/**click** — the CLI. Package with `uv` (PyPI-ready).
+- **typer** — the CLI. Packaged with `uv`/`hatchling`.
 
 ---
 
-## Intended repo layout
+## Repo layout
 
 ```
 initree/
 ├── CLAUDE.md
-├── docs/                      # the locked contract (source of truth)
+├── docs/                      # the locked contract (source of truth) + tasks.md
 ├── .claude/                   # agents + skills + rules (see below)
 ├── src/initree/
-│   ├── manifest.py            # pydantic models for layer.yaml + the capability schema
+│   ├── manifest.py            # pydantic models for layer.yaml + recipe loaders
+│   ├── registry.py            # loads the capability registry as data
 │   ├── resolve.py             # the four static checks + topological order
 │   ├── context.py             # the capability bus + ${...} resolution
+│   ├── prompt.py              # collect each layer's inputs onto the bus seed
+│   ├── recipe.py              # render recipes + resolve {{TOKEN}}s (ci layer)
+│   ├── secrets.py             # INITREE_SECRETS.md from declared secret purposes
 │   ├── emit.py                # template render + injection splicing
+│   ├── finalize.py            # per-layer finalize hooks
 │   ├── lifecycle.py           # orchestrates resolve→prompt→compute→emit→finalize
+│   ├── resources.py           # locate bundled layers + registry (checkout or wheel)
 │   └── cli.py
-├── layers/                    # the layers themselves; one dir per layer
-│   └── <id>/layer.yaml + templates/
+├── layers/                    # the 10 shipped layers; one dir per layer (layer.yaml + templates/)
 └── tests/
-    └── fixtures/              # valid + deliberately-broken recipes (drive resolve TDD)
+    ├── fixtures/              # valid + deliberately-broken recipes (drive resolve)
+    └── golden/                # byte-exact snapshots of both slices' emitted trees
 ```
 
 ---
