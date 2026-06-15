@@ -201,8 +201,14 @@ def _render_templates(layer: Layer, bus: Bus) -> Iterator[tuple[str, str]]:
     if not templates.is_dir():
         return
     for path in sorted(templates.rglob("*")):
-        if path.is_file():
-            yield path.relative_to(templates).as_posix(), render_text(path.read_text(), bus)
+        if not path.is_file():
+            continue
+        # pip byte-compiles every .py it installs, including template files, leaving __pycache__
+        # next to them in an installed wheel. Those .pyc are not templates — skip them, or the
+        # text render below chokes on the bytecode.
+        if "__pycache__" in path.parts:
+            continue
+        yield path.relative_to(templates).as_posix(), render_text(path.read_text(), bus)
 
 
 def _guard_ownership(layer: Layer, rel_path: str, owner_of: Mapping[str, str]) -> None:

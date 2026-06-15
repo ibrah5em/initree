@@ -15,6 +15,7 @@ from typing import Any, NoReturn
 
 import typer
 
+from initree import resources
 from initree.context import ComputeError
 from initree.emit import EmitError
 from initree.finalize import FinalizeError
@@ -39,8 +40,10 @@ def new(
         "--recipe",
         help="slot layers joined by '+', e.g. go+gin+docker+gitlab-ci+k8s+slack",
     ),
-    layers_dir: Path = typer.Option(
-        Path("layers"), "--layers-dir", help="directory holding <id>/layer.yaml layers"
+    layers_dir: Path | None = typer.Option(
+        None,
+        "--layers-dir",
+        help="directory holding <id>/layer.yaml layers (default: the bundled layers)",
     ),
     out_dir: Path | None = typer.Option(
         None, "--out", help="output directory (default: ./<project-slug>)"
@@ -67,7 +70,7 @@ def new(
     ask = _make_asker(preset, interactive=not no_input)
 
     try:
-        layers = load_selected(layers_dir, ids)
+        layers = load_selected(layers_dir or resources.layers_dir(), ids)
         result = build(
             layers, seed=seed, ask=ask, out_dir=destination, run_finalize=not no_finalize
         )

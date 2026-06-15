@@ -24,6 +24,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 from collections.abc import Callable, Iterator, Mapping
 from pathlib import Path
 from typing import Any
@@ -235,10 +236,16 @@ def _hook_keys(layer: Layer) -> set[str]:
 
 def _run_hook(layer_id: str, hook: Path, cwd: Path, env: Mapping[str, str]) -> str:
     try:
-        # Absolute path: the hook runs with cwd=layer dir, so a path relative to the engine's cwd
-        # would resolve against the wrong base (e.g. a relative --layers-dir).
+        # A .py compute hook imports initree.recipe to render recipes, so it must run under the
+        # interpreter that has initree installed — sys.executable, in both an installed wheel and an
+        # editable checkout. Its own `#!/usr/bin/env python3` shebang would pick the system python,
+        # which has no initree. Any other executable (the escape hatch is "prints JSON", docs/01 §1)
+        # runs via its shebang. Absolute path: the hook runs with cwd=layer dir.
+        argv = (
+            [sys.executable, str(hook.resolve())] if hook.suffix == ".py" else [str(hook.resolve())]
+        )
         result = subprocess.run(
-            [str(hook.resolve())],
+            argv,
             cwd=cwd,
             env=dict(env),
             capture_output=True,
@@ -247,7 +254,7 @@ def _run_hook(layer_id: str, hook: Path, cwd: Path, env: Mapping[str, str]) -> s
     except OSError as exc:
         raise ComputeError(
             f"layer '{layer_id}' compute hook '{hook}' could not be executed ({exc}); "
-            "it must be executable and carry a shebang"
+            "a non-python hook must be executable and carry a shebang"
         ) from exc
     if result.returncode != 0:
         detail = result.stderr.strip() or result.stdout.strip()
