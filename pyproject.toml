@@ -39,6 +39,10 @@ dev = [
     "ruff>=0.5",
     "pyright>=1.1",
 ]
+# Site build only — kept out of the default sync, so `uv sync` for dev/CI stays lean.
+docs = [
+    "mkdocs-material>=9.5",
+]
 
 [build-system]
 requires = ["hatchling"]
