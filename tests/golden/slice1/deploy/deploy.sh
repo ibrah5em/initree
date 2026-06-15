@@ -8,7 +8,7 @@ if [ "$#" -lt 1 ]; then
   exit 1
 fi
 
-image="ghcr.io/myapp:$1"
+image="ghcr.io/your-org/myapp:$1"
 
 docker pull "$image"
 docker rm -f myapp 2>/dev/null || true

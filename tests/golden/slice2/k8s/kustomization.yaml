@@ -8,5 +8,5 @@ resources:
 # The `app` placeholder the deployment carries; CI pins newTag to the commit sha at deploy time.
 images:
   - name: app
-    newName: ghcr.io/myapp
+    newName: ghcr.io/your-org/myapp
     newTag: latest

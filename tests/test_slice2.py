@@ -82,10 +82,11 @@ def test_ci_layer_renders_recipes_into_gitlab_native_tokens(tmp_path):
     assert result.bus["ci.provider"] == "gitlab-ci"
     pipeline = (out / ".gitlab-ci.yml").read_text()
     # {{IMAGE}} -> base:$CI_COMMIT_SHA, the predefined registry credential pair, {{SECRET}} -> $VAR.
-    assert "docker build -t ghcr.io/myapp:$CI_COMMIT_SHA ." in pipeline
+    assert "docker build -t ghcr.io/your-org/myapp:$CI_COMMIT_SHA ." in pipeline
     assert "docker login ghcr.io -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD" in pipeline
     assert (
-        "cd k8s && kustomize edit set image app=ghcr.io/myapp:$CI_COMMIT_SHA && cd .." in pipeline
+        "cd k8s && kustomize edit set image app=ghcr.io/your-org/myapp:$CI_COMMIT_SHA && cd .."
+        in pipeline
     )
     assert "kubectl apply -k k8s/ -n default" in pipeline
     # no engine/deferred token survives the ci render (GitLab's own $VARs are fine)
