@@ -20,11 +20,14 @@ from initree.context import ComputeError
 from initree.emit import EmitError
 from initree.finalize import FinalizeError
 from initree.lifecycle import BuildResult, build, engine_seed, slugify
-from initree.manifest import Input, load_selected
+from initree.manifest import Input, Layer, load_recipe, load_selected
 from initree.prompt import Asker
 from initree.resolve import ResolveError
 
 app = typer.Typer(help="Compose a project from independent layers.", no_args_is_help=True)
+
+# The canonical slot order, so `list` reads top-to-bottom the way a recipe composes.
+_SLOT_ORDER = ("language", "framework", "container", "ci", "deploy", "notify")
 
 
 def _version_callback(value: bool) -> None:
@@ -92,6 +95,33 @@ def new(
         _fail(str(exc))
 
     _report(result, destination)
+
+
+@app.command(name="list")
+def list_layers(
+    layers_dir: Path | None = typer.Option(
+        None,
+        "--layers-dir",
+        help="directory holding <id>/layer.yaml layers (default: the bundled layers)",
+    ),
+) -> None:
+    """List the available layers, grouped by slot."""
+    try:
+        layers = load_recipe(layers_dir or resources.layers_dir())
+    except FileNotFoundError as exc:
+        _fail(str(exc))
+
+    by_slot: dict[str, list[Layer]] = {}
+    for layer in layers:
+        by_slot.setdefault(layer.slot, []).append(layer)
+
+    width = max((len(layer.id) for layer in layers), default=0)
+    known = [slot for slot in _SLOT_ORDER if slot in by_slot]
+    extra = [slot for slot in sorted(by_slot) if slot not in _SLOT_ORDER]
+    for slot in known + extra:
+        typer.secho(slot, fg=typer.colors.CYAN)
+        for layer in sorted(by_slot[slot], key=lambda item: item.id):
+            typer.echo(f"  {layer.id.ljust(width)}  {layer.name}")
 
 
 def _make_asker(preset: Mapping[str, Any], *, interactive: bool) -> Asker:
