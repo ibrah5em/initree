@@ -1,0 +1,33 @@
+stages: [test, build, deploy, notify]
+
+test:
+  stage: test
+  image: golang:1.22
+  script:
+    - go mod download
+    - go test ./...
+
+build_image:
+  stage: build
+  image: docker:27
+  services: [docker:27-dind]
+  script:
+    - docker login ghcr.io -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+    - docker build -t ghcr.io/myapp:$CI_COMMIT_SHA .
+    - docker push ghcr.io/myapp:$CI_COMMIT_SHA
+
+deploy:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - cd k8s && kustomize edit set image app=ghcr.io/myapp:$CI_COMMIT_SHA && cd ..
+    - kubectl apply -k k8s/ -n default
+    - kubectl rollout status deployment/myapp -n default
+  variables:
+    KUBECONFIG: $KUBE_CONFIG
+
+notify:
+  stage: notify
+  when: on_success
+  script:
+    - curl -sf -X POST -H 'Content-type:application/json' --data '{"text":"✅ myapp deployed — kubernetes · ns/default · 2 replicas https://"}' $SLACK_WEBHOOK
