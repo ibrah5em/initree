@@ -1,4 +1,4 @@
-"""emit — phase 4: render owned files, then splice injections (docs/01 §5).
+"""emit — phase 4: render owned files, then splice injections (docs/lifecycle §5).
 
 Two ordered passes over the frozen bus:
 
@@ -17,7 +17,7 @@ Format strategies differ by where the anchor lives. A structured format (``toml-
 toml and yaml round-trip the surrounding formatting, json regenerates (it has no comments to keep).
 A text format (``text-block``, ``line``) finds a marker region the template author placed —
 ``>>> initree:inject <id>`` / ``<<< initree:inject <id>`` — and replaces its body, keying off the
-injection-point id the way the rendered proof in docs/01 §6 does.
+injection-point id the way the rendered proof in docs/lifecycle §6 does.
 """
 
 from __future__ import annotations

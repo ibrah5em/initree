@@ -5,7 +5,7 @@ name: Deploy to Kubernetes
 description: Consumes the same container.exposed_port vps-ssh did, owns the cluster manifests, and surfaces facts to other layers only through the common deploy.* keys.
 
 inputs:
-  # deploy.k8s.* are backend-private (docs/03 §6): they appear only in k8s-owned files and its own
+  # deploy.k8s.* are backend-private (docs/registry §6): they appear only in k8s-owned files and its own
   # recipe, never on the shared bus for another layer to read.
   - { key: deploy.k8s.namespace, prompt: "Namespace", type: string, default: "default" }
   - { key: deploy.k8s.replicas, prompt: "Replicas", type: int, default: 2 }
@@ -27,7 +27,7 @@ provides:
   # has no conditional, so a compute hook resolves it (vps-ssh provides "" the same way, declaratively).
   - { key: deploy.url, type: string, value: ":hook" }
   # The ci deploy job must run in an image carrying kubectl + kustomize; that's a deploy fact, not a
-  # ci one, so it travels as a capability the ci layer reads for the job image (docs/03 §8).
+  # ci one, so it travels as a capability the ci layer reads for the job image (docs/registry §8).
   - { key: deploy.runtime_image, type: string, value: "bitnami/kubectl:latest" }
   # {{IMAGE}} and {{SECRET_FILE:kubeconfig}} stay deferred for the ci layer; ${...} is concrete after
   # compute. The cluster credential rides the recipe as a file-token so it lands in the secrets

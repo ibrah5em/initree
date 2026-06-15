@@ -3,8 +3,8 @@
 One test accepts the full recipe and pins its topological order; the rest each feed a recipe that
 violates exactly one static check and assert resolve rejects it with the matching error. The four
 named in the build order (cycle, owns-overlap, missing provider, missing container) are here, plus
-two more so every check in docs/01 §5 — dangling injection and unsatisfied requirement — has a red
-test of its own. No check should ship without one.
+two more so every check in docs/lifecycle §5 — dangling injection and unsatisfied requirement —
+has a red test of its own. No check should ship without one.
 """
 
 from pathlib import Path

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """gh-actions compute hook: turn the consumed recipes into native workflow step blocks.
 
-The ci slot is the sole resolver of deferred {{...}} tokens (docs/03 §7, §9) — only it knows the
-runtime's native syntax. This reads the backend-agnostic recipes the engine exported onto the
+The ci slot is the sole resolver of deferred {{...}} tokens (docs/registry §7, §9) — only it knows
+the runtime's native syntax. This reads the backend-agnostic recipes the engine exported onto the
 environment, resolves their tokens through GitHub Actions' dialect, and prints the YAML step blocks
 keyed by the ":hook" provides the manifest declares. The workflow template then splices those blocks
 into jobs.build.steps / jobs.deploy.steps.

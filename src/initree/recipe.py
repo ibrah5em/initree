@@ -1,10 +1,11 @@
-"""recipe — render *_recipe command lists into native ci script lines (docs/01 §6, docs/02 §7).
+"""recipe — render *_recipe command lists into native ci script lines (docs/lifecycle §6,
+docs/generalization §7).
 
 A *recipe* is a ``list<string>`` of backend-agnostic shell commands a non-ci layer puts on the bus
 (``container.build_recipe``, ``deploy.apply_recipe``, ``notify.send_recipe``). The commands may
 carry deferred ``{{...}}`` tokens — and only the ci slot may resolve those, because only it knows
-the runtime's native syntax (docs/03 §1, §9). This module is what the ci layer calls at its emit
-render to turn a consumed recipe into the script lines it splices into its pipeline file.
+the runtime's native syntax (docs/registry §1, §9). This module is what the ci layer calls at
+its emit render to turn a consumed recipe into the script lines it splices into its pipeline file.
 
 Two tiers, one already gone: by the time a recipe reaches here it has been through compute, so its
 ``${namespace.key}`` references are concrete (resolved against the frozen bus). What remains is the
@@ -15,7 +16,7 @@ Two tiers, one already gone: by the time a recipe reaches here it has been throu
     {{SECRET:purpose}}      -> the native masked-variable reference
     {{SECRET_FILE:purpose}} -> the native file-type-variable path
 
-The token *grammar* is engine-owned — it is the locked vocabulary in docs/03 §9. The *native
+The token *grammar* is engine-owned — it is the locked vocabulary in docs/registry §9. The *native
 strings* each token maps to are ci-private (``$CI_COMMIT_SHA`` vs ``${{ github.sha }}``), so the
 engine never authors them. The caller (a ci layer) supplies them as a :class:`Dialect`; this module
 only parses tokens and substitutes what the dialect returns.
@@ -44,7 +45,8 @@ class RecipeError(Exception):
 
 
 class UnknownTokenError(RecipeError):
-    """A `{{...}}` token is not one of the four locked forms (docs/03 §9) — an authoring error."""
+    """A `{{...}}` token is not one of the four locked forms (docs/registry §9) — an authoring
+    error."""
 
 
 class MissingImageBaseError(RecipeError):

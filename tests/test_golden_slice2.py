@@ -1,7 +1,7 @@
 """Golden test: slice 2 (go+gin+docker+gitlab-ci+k8s+slack) renders byte-for-byte.
 
 Locks the whole emitted tree against tests/golden/slice2/. The byte-exact complement to
-test_slice2.py's behavioral asserts — the concrete form of the docs/02 §7 generalization proof,
+test_slice2.py's behavioral asserts — the concrete form of the docs/generalization §7 proof,
 adapted to the shipped layers. test_slice2.py says the right values flow through the second stack
 (compiled language, multi-stage container, GitLab CI dialect, namespaced deploy, optional notify);
 this says nothing else moved.

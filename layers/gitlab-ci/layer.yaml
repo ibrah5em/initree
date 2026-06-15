@@ -17,7 +17,7 @@ consumes:
 
 provides:
   - { key: ci.provider, type: string, value: "gitlab-ci" }
-  # Backend-private (docs/03 §12): the script lines for each job, rendered from the consumed recipes
+  # Backend-private (docs/registry §12): the script lines for each job, rendered from the consumed recipes
   # by the compute hook. Never consumed by another layer — only this layer's own pipeline template
   # references them. ":hook" because only code can resolve the {{TOKEN}}s into GitLab syntax.
   - { key: ci.gitlab_ci.test_script, type: string, value: ":hook" }

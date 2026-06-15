@@ -4,7 +4,7 @@ Two dialects stand in for the ci layers that don't exist yet: a GitLab-flavoured
 refs, predefined registry vars) and a GitHub-flavoured one (${{ secrets.X }}, ${{ github.sha }}).
 The headline test renders the *same* backend-agnostic recipe through both and gets each backend's
 native syntax with zero change to the recipe — the whole point of the two-tier split. Values mirror
-the rendered proofs in docs/01 §6 and docs/02 §7.
+the rendered proofs in docs/lifecycle §6 and docs/generalization §7.
 """
 
 import pytest
@@ -20,7 +20,7 @@ from initree.recipe import (
 )
 
 # GitLab: a secret renders to a bare $VAR; the registry credentials are predefined CI/CD variables,
-# so they are overrides rather than the convention. Mirrors docs/02 §3.6's token map.
+# so they are overrides rather than the convention. Mirrors docs/generalization §3.6's token map.
 GITLAB = Dialect(
     provider="gitlab-ci",
     short_sha="$CI_COMMIT_SHA",
@@ -35,7 +35,8 @@ GITHUB = Dialect(
     secret_suffix=" }}",
 )
 
-# What the bus carries after compute: registry.image_name_base is untagged (docs/02 §3.3).
+# What the bus carries after compute: registry.image_name_base is untagged
+# (docs/generalization §3.3).
 BUS = {"registry.image_name_base": "registry.gitlab.com/myapp"}
 
 # docker's container.build_recipe after compute: ${registry.host} concrete, tokens still deferred.

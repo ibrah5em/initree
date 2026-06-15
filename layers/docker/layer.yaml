@@ -5,7 +5,7 @@ name: Docker image
 description: Consumes the app.* contract, produces the container.* capability and a build recipe.
 
 inputs:
-  # registry.docker.owner is backend-private (docs/03 §6): it only shapes this layer's own
+  # registry.docker.owner is backend-private (docs/registry §6): it only shapes this layer's own
   # registry.image_name_base, never crossing to another layer. ghcr.io requires an owner segment
   # (ghcr.io/<owner>/<image>) — there's no way to derive it from the project name, so it's an input.
   - { key: registry.docker.owner, prompt: "Registry owner (GitHub org or user)", type: string, default: "your-org" }

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """gitlab-ci compute hook: turn the consumed recipes into native `script:` lines.
 
-The ci slot is the sole resolver of deferred {{...}} tokens (docs/03 §7, §9) — only it knows the
-runtime's native syntax. This reads the backend-agnostic recipes the engine exported onto the
+The ci slot is the sole resolver of deferred {{...}} tokens (docs/registry §7, §9) — only it knows
+the runtime's native syntax. This reads the backend-agnostic recipes the engine exported onto the
 environment, resolves their tokens through GitLab CI's dialect, and prints the script lines keyed by
 the ":hook" provides the manifest declares. The pipeline template then splices each block under its
 job's `script:`.
 
 Only the token map and the file structure differ from the gh-actions hook; the recipes it consumes
-are identical. That is the whole point of the recipe boundary (docs/02 §6) — swap the ci layer,
-every other layer is untouched.
+are identical. That is the whole point of the recipe boundary (docs/generalization §6) — swap the
+ci layer, every other layer is untouched.
 
 Indentation is owned here: the lines come back ready to sit under a job's `script:` (four spaces,
 one `- ` item per command), so the engine's plain ${...} substitution drops them in correctly.

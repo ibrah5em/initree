@@ -1,6 +1,6 @@
 # initree capability registry — machine-readable mirror of v1
-# Reference data for the engine's resolve/validation. Mirror of docs/03-capability-registry-v1.md.
-# Keep this in sync with the doc on every change (docs/03 §16 versioning policy).
+# Reference data for the engine's resolve/validation. Mirror of docs/registry.md.
+# Keep this in sync with the doc on every change (docs/registry §16 versioning policy).
 version: 1
 
 # Each namespace is owned by exactly one slot. A layer may only provide keys in its slot's namespace.

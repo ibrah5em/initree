@@ -1,7 +1,7 @@
 """Pydantic models for layer.yaml + recipe loading.
 
-This is the contract surface as code: the shape of a layer manifest (docs/01 §1) and the
-locked capability type vocabulary (docs/03 §2). No resolve logic lives here — the four static
+This is the contract surface as code: the shape of a layer manifest (docs/lifecycle §1) and the
+locked capability type vocabulary (docs/registry §2). No resolve logic lives here — the four static
 checks and the topological order are resolve.py's job. This module only parses and validates the
 *shape* of each manifest; whether a set of manifests forms a buildable recipe is decided later.
 """
@@ -14,8 +14,8 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 from ruamel.yaml import YAML
 
-# The locked vocabularies (docs/03 §2, §11). Kept as Literals so a typo in a manifest fails loud
-# at parse time rather than silently slipping past resolve.
+# The locked vocabularies (docs/registry §2, §11). Kept as Literals so a typo in a manifest
+# fails loud at parse time rather than silently slipping past resolve.
 CapabilityType = Literal["string", "int", "bool", "list", "map", "recipe"]
 InjectionFormat = Literal["toml-array", "yaml-seq", "text-block", "line", "json-array"]
 InjectionOrder = Literal["alpha", "declared", "priority"]

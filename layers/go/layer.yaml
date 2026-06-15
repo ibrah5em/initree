@@ -6,7 +6,7 @@ description: Owns go.mod and exposes the dependency injection point. Compiled, s
 
 inputs:
   - { key: runtime.version, prompt: "Go version", type: string, default: "1.22" }
-  # runtime.go.entrypoint is backend-private (docs/03 §6): it derives runtime.build_cmd and is never
+  # runtime.go.entrypoint is backend-private (docs/registry §6): it derives runtime.build_cmd and is never
   # consumed by another layer.
   - { key: runtime.go.entrypoint, prompt: "main package path", type: string, default: "./cmd/server" }
 

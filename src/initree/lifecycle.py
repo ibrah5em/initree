@@ -1,4 +1,4 @@
-"""lifecycle — orchestrates the five engine phases (docs/01 §5).
+"""lifecycle — orchestrates the five engine phases (docs/lifecycle §5).
 
 resolve -> prompt -> compute -> emit -> finalize. Each phase is engine-global; within a phase the
 layers run in the topological order resolve computed, each uninterrupted ("layer as a function").
@@ -66,7 +66,7 @@ def build(
 
 
 def engine_seed(name: str, out_dir: Path) -> dict[str, Any]:
-    """The project.*/git.* keys the engine puts on the bus before any layer runs (docs/01 §1).
+    """The project.*/git.* keys the engine seeds before any layer runs (docs/lifecycle §1).
 
     The only values produced by neither a layer nor a prompt. Keys mirror the engine-owned entries
     in the registry; git.is_repo is false at scaffold time — a finalize hook may `git init` later.

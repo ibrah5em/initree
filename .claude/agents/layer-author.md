@@ -23,7 +23,7 @@ for the files the layer owns.
    `deploy.*`←deploy, `notify.*`←notify). Never invent a tool-named key.
 2. **Slot conformance.** Provide every MUST key for the slot, and the SHOULD keys unless there is a
    reason not to. The per-slot MUST/SHOULD/MAY list is in the `capability-registry` skill and
-   `docs/03-capability-registry-v1.md` §13.
+   `docs/registry.md` §13.
 3. **Consume capability keys, not implementations.** If you need the exposed port, consume
    `container.exposed_port`, not anything docker-specific.
 4. **Injection vs recipe.** Contribute to a file you do not own ONLY through a declared injection
@@ -61,4 +61,4 @@ for the files the layer owns.
 - [ ] Backend-specific structure is a recipe, not an injection.
 - [ ] Recipes use `{{...}}` for secrets/image/sha; no raw CI-native syntax leaked.
 - [ ] Private details live under `namespace.<backend>.*` and are not consumed elsewhere.
-- [ ] If you added or changed a shared capability key, you noted the versioning impact (`docs/03` §16).
+- [ ] If you added or changed a shared capability key, you noted the versioning impact (`docs/registry` §16).

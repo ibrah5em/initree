@@ -23,7 +23,7 @@ These are the rules. If a change violates one, it is wrong regardless of how con
 
 1. **Capability, not implementation.** Consumers reference capability keys
    (`namespace.key`), never tool-named keys. There is no `docker.*` or `gitlab.*` in the shared
-   contract — only `container.*`, `ci.*`, etc. (full vocabulary in `docs/03`).
+   contract — only `container.*`, `ci.*`, etc. (full vocabulary in `docs/registry`).
 2. **Namespace ownership.** Each namespace has exactly one authoritative provider *slot*
    (`runtime.*`←language, `app.*`←framework, `container.*`/`registry.*`←container, `ci.*`←ci,
    `deploy.*`←deploy, `notify.*`←notify). A layer may only provide keys in its slot's namespace.
@@ -63,9 +63,8 @@ These are the rules. If a change violates one, it is wrong regardless of how con
      *after* compute, so a later-sorted contributor still lands in an earlier owner's file.
   5. `finalize` — per-layer hooks (`chmod +x`, `git init`, `go mod tidy`, format).
 
-Full detail: `docs/01-layer-contract-and-lifecycle.md`. The generalization proof across two
-unrelated stacks (and the cycle reasoning): `docs/02-generalization-proof.md`. The locked public
-vocabulary: `docs/03-capability-registry-v1.md`.
+Full detail: `docs/lifecycle.md`. The generalization proof across two unrelated stacks (and the
+cycle reasoning): `docs/generalization.md`. The locked public vocabulary: `docs/registry.md`.
 
 ---
 
@@ -164,7 +163,7 @@ merged into skills in Claude Code 2026; this repo uses skills, not legacy `.clau
 - A layer's private inputs/state live under `namespace.<backend>.*` (e.g. `deploy.k8s.namespace`) and
   are **never** consumed by another layer — cross-layer needs go through common keys
   (`deploy.summary`).
-- Adding/renaming a capability key follows the versioning policy in `docs/03` §16 (adding an optional
+- Adding/renaming a capability key follows the versioning policy in `docs/registry` §16 (adding an optional
   key is non-breaking; adding a MUST key or renaming is breaking).
 - When in doubt about whether something is an injection or a recipe, default to **recipe** if its
   structure differs across backends.

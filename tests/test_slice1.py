@@ -4,7 +4,7 @@ Not a fixture run — this loads the shipped layers under layers/ and proves the
 composes: the capability bus carries app.port two hops to the deploy step, deps inject into the
 language's pyproject, and the ci layer renders the container/deploy recipes into GitHub-native
 syntax, resolving the {{TOKEN}}s nobody upstream is allowed to. Mirrors the rendered proof in
-docs/01 §6, adapted to the recipe-based contract (docs/03).
+docs/lifecycle §6, adapted to the recipe-based contract (docs/registry).
 """
 
 from pathlib import Path
