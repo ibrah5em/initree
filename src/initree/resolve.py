@@ -23,7 +23,7 @@ from graphlib import CycleError, TopologicalSorter
 from itertools import combinations
 
 from initree.manifest import Layer
-from initree.registry import engine_seeded_keys
+from initree.registry import engine_seeded_keys, provider_slot_for
 
 
 class ResolveError(Exception):
@@ -105,8 +105,19 @@ def _check_providers(layers: list[Layer]) -> None:
         if need.required and need.key not in provided
     ]
     if missing:
-        details = ", ".join(f"'{key}' (consumed by '{consumer}')" for consumer, key in missing)
-        raise MissingProviderError(f"no provider in the recipe for required key(s): {details}")
+        details = ", ".join(_describe_missing(consumer, key) for consumer, key in missing)
+        raise MissingProviderError(
+            f"no provider in the recipe for required key(s): {details}. add a layer for the named "
+            "slot, or swap one that already provides the key"
+        )
+
+
+def _describe_missing(consumer: str, key: str) -> str:
+    """A missing required key, named with the slot that would provide it so the fix is obvious."""
+    slot = provider_slot_for(key)
+    if slot is not None and slot != "engine":
+        return f"'{key}' (consumed by '{consumer}', provided by the {slot} slot)"
+    return f"'{key}' (consumed by '{consumer}')"
 
 
 def _check_injections(layers: list[Layer]) -> None:

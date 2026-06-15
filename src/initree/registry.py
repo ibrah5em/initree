@@ -40,6 +40,22 @@ def engine_seeded_keys() -> frozenset[str]:
 
 
 @lru_cache(maxsize=1)
+def _namespace_providers() -> dict[str, str]:
+    data = _load()
+    return {ns: spec["provider"] for ns, spec in data.get("namespaces", {}).items()}
+
+
+def provider_slot_for(key: str) -> str | None:
+    """The slot that owns ``key``'s namespace, e.g. ``container.image_name`` -> ``"container"``.
+
+    Returns None for a namespace the registry doesn't map. Turns a missing-provider error into
+    actionable advice — which kind of layer the recipe is missing (docs/registry §3).
+    """
+    namespace = key.split(".", 1)[0]
+    return _namespace_providers().get(namespace)
+
+
+@lru_cache(maxsize=1)
 def secret_purposes() -> dict[str, str]:
     """Each declared secret purpose mapped to its human-readable note (docs/registry §10).
 

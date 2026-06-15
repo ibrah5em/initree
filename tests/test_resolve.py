@@ -49,6 +49,15 @@ def test_recipe_missing_a_required_container_is_rejected():
         resolve(load_recipe(FIXTURES / "missing-container"))
 
 
+def test_missing_provider_error_names_the_owning_slot():
+    with pytest.raises(MissingProviderError) as exc:
+        resolve(load_recipe(FIXTURES / "missing-container"))
+
+    message = str(exc.value)
+    assert "container.exposed_port" in message
+    assert "provided by the container slot" in message
+
+
 def test_dangling_injection_target_is_rejected():
     with pytest.raises(DanglingInjectionError):
         resolve(load_recipe(FIXTURES / "dangling-inject"))
