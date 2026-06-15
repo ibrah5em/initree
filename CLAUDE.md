@@ -7,7 +7,7 @@ from *composing N+M+K layers*, never from maintaining N×M×K templates — whic
 killed every "universal scaffolder" before it.
 
 ```
-initree new myapp --recipe python+fastapi+docker+gh-actions+vps
+initree new myapp --recipe python+fastapi+docker+gh-actions+vps-ssh
 initree new myapp --recipe go+gin+gitlab-ci+docker+k8s+slack
 ```
 
