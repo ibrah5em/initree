@@ -22,8 +22,8 @@ jobs:
       - name: Build and push image
         run: |
           docker login ghcr.io -u ${{ secrets.REGISTRY_USER }} -p ${{ secrets.REGISTRY }}
-          docker build -t ghcr.io/myapp:${{ github.sha }} .
-          docker push ghcr.io/myapp:${{ github.sha }}
+          docker build -t ghcr.io/your-org/myapp:${{ github.sha }} .
+          docker push ghcr.io/your-org/myapp:${{ github.sha }}
 
   deploy:
     needs: build
@@ -31,4 +31,4 @@ jobs:
     steps:
       - name: Deploy over SSH
         run: |
-          ssh deploy@example.com "docker pull ghcr.io/myapp:${{ github.sha }} && docker run -d --restart=always --name myapp -p 80:8000 ghcr.io/myapp:${{ github.sha }}"
+          ssh deploy@example.com "docker pull ghcr.io/your-org/myapp:${{ github.sha }} && docker run -d --restart=always --name myapp -p 80:8000 ghcr.io/your-org/myapp:${{ github.sha }}"

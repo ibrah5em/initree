@@ -6,10 +6,10 @@ adapted to the shipped layers. test_slice2.py says the right values flow through
 (compiled language, multi-stage container, GitLab CI dialect, namespaced deploy, optional notify);
 this says nothing else moved.
 
-One reconciliation with §7: the shipped docker layer hardcodes registry.host = ghcr.io, so the
-real build emits ghcr.io/myapp everywhere §7 illustrates registry.gitlab.com/myapp. §7's host is
-illustrative; task 28's "docker reused with a byte-identical manifest" is the contract, so the
-golden tracks the real ghcr.io output.
+One reconciliation with §7: the shipped docker layer hardcodes registry.host = ghcr.io and folds in
+the registry.docker.owner input, so the real build emits ghcr.io/<owner>/myapp everywhere §7
+illustrates registry.gitlab.com/myapp. §7's host is illustrative; task 28's "docker reused with a
+byte-identical manifest" is the contract, so the golden tracks the real ghcr.io output.
 
 Regenerate after an intentional render change:
 

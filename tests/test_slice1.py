@@ -51,9 +51,10 @@ def test_ci_layer_renders_recipes_into_github_native_tokens(tmp_path):
     workflow = (out / ".github/workflows/ci.yml").read_text()
     # {{IMAGE}} -> base:sha, {{SECRET:...}} -> ${{ secrets.* }} — resolved only by the ci slot.
     login = "docker login ghcr.io -u ${{ secrets.REGISTRY_USER }} -p ${{ secrets.REGISTRY }}"
-    assert "docker build -t ghcr.io/myapp:${{ github.sha }} ." in workflow
+    pull = 'ssh deploy@example.com "docker pull ghcr.io/your-org/myapp:${{ github.sha }}'
+    assert "docker build -t ghcr.io/your-org/myapp:${{ github.sha }} ." in workflow
     assert login in workflow
-    assert 'ssh deploy@example.com "docker pull ghcr.io/myapp:${{ github.sha }}' in workflow
+    assert pull in workflow
     # no engine token survives the ci render (GitHub's own ${{ ... }} is fine)
     assert "{{IMAGE}}" not in workflow
     assert "{{SECRET" not in workflow
@@ -65,7 +66,7 @@ def test_deploy_script_is_owned_rendered_and_executable(tmp_path):
     script = out / "deploy/deploy.sh"
     text = script.read_text()
     # engine ${...} refs resolved; the shell's own $1/$image left untouched.
-    assert 'image="ghcr.io/myapp:$1"' in text
+    assert 'image="ghcr.io/your-org/myapp:$1"' in text
     assert "--name myapp -p 80:8000" in text
     # the finalize hook chmod'd it
     import os

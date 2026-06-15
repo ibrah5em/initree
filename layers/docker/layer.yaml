@@ -4,6 +4,12 @@ slot: container
 name: Docker image
 description: Consumes the app.* contract, produces the container.* capability and a build recipe.
 
+inputs:
+  # registry.docker.owner is backend-private (docs/03 §6): it only shapes this layer's own
+  # registry.image_name_base, never crossing to another layer. ghcr.io requires an owner segment
+  # (ghcr.io/<owner>/<image>) — there's no way to derive it from the project name, so it's an input.
+  - { key: registry.docker.owner, prompt: "Registry owner (GitHub org or user)", type: string, default: "your-org" }
+
 consumes:
   - { key: runtime.base_image, required: true }      # FROM
   - { key: runtime.install_cmd, required: true }     # dependency install
@@ -18,7 +24,7 @@ provides:
   - { key: container.image_name, type: string, value: "${project.slug}" }
   - { key: container.exposed_port, type: int, value: "${app.port}" }
   - { key: registry.host, type: string, value: "ghcr.io" }
-  - { key: registry.image_name_base, type: string, value: "${registry.host}/${project.slug}" }
+  - { key: registry.image_name_base, type: string, value: "${registry.host}/${registry.docker.owner}/${project.slug}" }
   # Backend-agnostic build/push: ${...} is resolved at compute, {{...}} stays for the ci layer.
   - key: container.build_recipe
     type: recipe

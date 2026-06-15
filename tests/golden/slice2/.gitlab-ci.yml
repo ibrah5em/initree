@@ -13,14 +13,14 @@ build_image:
   services: [docker:27-dind]
   script:
     - docker login ghcr.io -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
-    - docker build -t ghcr.io/myapp:$CI_COMMIT_SHA .
-    - docker push ghcr.io/myapp:$CI_COMMIT_SHA
+    - docker build -t ghcr.io/your-org/myapp:$CI_COMMIT_SHA .
+    - docker push ghcr.io/your-org/myapp:$CI_COMMIT_SHA
 
 deploy:
   stage: deploy
   image: bitnami/kubectl:latest
   script:
-    - cd k8s && kustomize edit set image app=ghcr.io/myapp:$CI_COMMIT_SHA && cd ..
+    - cd k8s && kustomize edit set image app=ghcr.io/your-org/myapp:$CI_COMMIT_SHA && cd ..
     - kubectl apply -k k8s/ -n default
     - kubectl rollout status deployment/myapp -n default
   variables:
