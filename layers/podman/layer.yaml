@@ -1,0 +1,38 @@
+apiVersion: initree.dev/v1
+id: podman
+slot: container
+name: Podman image
+description: Drop-in container slot alongside docker — same container.* contract, podman build recipe.
+
+inputs:
+  # registry.podman.owner is backend-private (docs/registry §6): it only shapes this layer's own
+  # registry.image_name_base, never crossing to another layer. ghcr.io requires an owner segment
+  # (ghcr.io/<owner>/<image>) — there's no way to derive it from the project name, so it's an input.
+  - { key: registry.podman.owner, prompt: "Registry owner (GitHub org or user)", type: string, default: "your-org" }
+
+consumes:
+  - { key: runtime.base_image, required: true }      # FROM
+  - { key: runtime.install_cmd, required: true }     # dependency install
+  - { key: app.start_command, required: true }       # CMD
+  - { key: app.port, required: true }                # EXPOSE
+  - { key: runtime.build_cmd, required: false }      # compiled langs only; absent for python
+  - { key: runtime.artifact, required: false }
+  - { key: runtime.run_base_image, required: false }
+
+provides:
+  - { key: container.runtime, type: string, value: "podman" }
+  - { key: container.image_name, type: string, value: "${project.slug}" }
+  - { key: container.exposed_port, type: int, value: "${app.port}" }
+  - { key: registry.host, type: string, value: "ghcr.io" }
+  - { key: registry.image_name_base, type: string, value: "${registry.host}/${registry.podman.owner}/${project.slug}" }
+  # Backend-agnostic build/push: ${...} is resolved at compute, {{...}} stays for the ci layer.
+  - key: container.build_recipe
+    type: recipe
+    value:
+      - "podman login ${registry.host} -u {{SECRET:registry_user}} -p {{SECRET:registry}}"
+      - "podman build -t {{IMAGE}} ."
+      - "podman push {{IMAGE}}"
+
+owns:
+  - "Containerfile"
+  - ".containerignore"
