@@ -98,9 +98,12 @@ layers (§9).
 | `runtime.run_base_image` | string | MAY | final-stage image for compiled languages | `gcr.io/distroless/static-debian12` |
 | `runtime.build_cmd` | string | MAY | compile step (compiled languages only) | `CGO_ENABLED=0 go build -o /out/server ...` |
 | `runtime.artifact` | string | MAY | built artifact path (compiled languages only) | `/out/server` |
+| `runtime.image_prep` | string | MAY | image-prep lines a single-stage build splices before the dependency install (the language's own setup, e.g. fetching its package manager) | `COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv` |
 
 Presence of `runtime.build_cmd` + `runtime.artifact` is the signal a container layer uses to choose a
-multi-stage build. Interpreted languages omit them.
+multi-stage build. Interpreted languages omit them. `runtime.image_prep` is how a single-stage
+language keeps its own toolchain setup out of the container layer — the container splices it verbatim,
+so swapping languages never edits the container. A language that needs no prep omits it.
 
 ---
 
@@ -241,8 +244,8 @@ contract**. They MUST NOT be consumed by other layers.
 
 **language** — MUST provide `runtime.language`, `runtime.version`, `runtime.base_image`,
 `runtime.install_cmd`. SHOULD provide `runtime.test_cmd`. MAY provide `runtime.run_base_image`,
-`runtime.build_cmd`, `runtime.artifact`. SHOULD own its dependency manifest and declare the
-`runtime.dependencies` injection point.
+`runtime.build_cmd`, `runtime.artifact`, `runtime.image_prep`. SHOULD own its dependency manifest and
+declare the `runtime.dependencies` injection point.
 
 **framework** — MUST provide `app.port`, `app.start_command`. SHOULD provide `app.healthcheck_path`.
 MUST `require` a language slot (with `one_of` if it only supports some). Typically injects into
@@ -251,7 +254,7 @@ MUST `require` a language slot (with `one_of` if it only supports some). Typical
 **container** — MUST provide `container.runtime`, `container.image_name`, `container.exposed_port`,
 `container.build_recipe`. SHOULD provide `registry.host`, `registry.image_name_base`. MUST consume
 `runtime.base_image`, `runtime.install_cmd`, `app.start_command`, `app.port`. MAY consume
-`runtime.build_cmd`, `runtime.artifact`, `runtime.run_base_image`.
+`runtime.build_cmd`, `runtime.artifact`, `runtime.run_base_image`, `runtime.image_prep`.
 
 **ci** — MUST provide `ci.provider`. MUST own its pipeline file and be the sole resolver of `{{...}}`
 tokens. MUST consume `container.build_recipe`, `deploy.apply_recipe`, `registry.image_name_base`,
