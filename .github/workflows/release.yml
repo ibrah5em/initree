@@ -7,6 +7,9 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  # Manual fallback: a tag whose commit message carries [skip ci] (e.g. a docs squash-merge) makes
+  # GitHub skip the tag-triggered run. Dispatching from the tag ref re-fires the publish by hand.
+  workflow_dispatch: {}
 
 jobs:
   pypi:
