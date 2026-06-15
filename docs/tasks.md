@@ -53,7 +53,7 @@ Publishing. The one remaining step is owner-only: configure the trusted publishe
 16. [x] `{{TOKEN}}` resolution at the ci render — `{{IMAGE}}`, `{{SHA}}`, `{{SECRET:..}}`, `{{SECRET_FILE:..}}` (`recipe.resolve_tokens`)
 17. [x] `INITREE_SECRETS.md` generation from declared secret purposes — token scan over the frozen bus (the deploy-input cluster section, e.g. the k8s pull-secret, is deferred to the k8s layer #26 where a real consumer exists)
 
-## Real layers — slice 1 (`python+fastapi+docker+gh-actions+vps`)
+## Real layers — slice 1 (`python+fastapi+docker+gh-actions+vps-ssh`)
 
 18. [x] `python` — language slot (owns `pyproject.toml`, exposes `runtime.dependencies`)
 19. [x] `fastapi` — framework slot (provides `app.*`, injects its deps)
