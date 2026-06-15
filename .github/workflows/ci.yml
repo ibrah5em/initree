@@ -25,13 +25,14 @@ jobs:
       - name: Sync dependencies
         run: uv sync --frozen
 
-      # Mirrors the local pre-commit gate. Format and lint are scoped to our source (src/tests);
-      # the golden snapshots and layer templates are excluded in pyproject — they aren't our code.
+      # Mirrors the local pre-commit gate. Scoped to our source: src/tests plus the layer hooks,
+      # which are real Python that runs at compute/finalize. Golden snapshots and layer templates
+      # are excluded in pyproject — they hold ${...}/{{...}} placeholders, not valid source.
       - name: Format
-        run: uv run ruff format --check src tests
+        run: uv run ruff format --check src tests layers
 
       - name: Lint
-        run: uv run ruff check src tests
+        run: uv run ruff check src tests layers
 
       - name: Types
         run: uv run pyright

@@ -8,11 +8,11 @@ the ":hook" provides the manifest declares. The pipeline template then splices e
 job's `script:`.
 
 Only the token map and the file structure differ from the gh-actions hook; the recipes it consumes
-are identical. That is the whole point of the recipe boundary (docs/02 §6) — swap the ci layer, every
-other layer is untouched.
+are identical. That is the whole point of the recipe boundary (docs/02 §6) — swap the ci layer,
+every other layer is untouched.
 
-Indentation is owned here: the lines come back ready to sit under a job's `script:` (four spaces, one
-`- ` item per command), so the engine's plain ${...} substitution drops them in correctly.
+Indentation is owned here: the lines come back ready to sit under a job's `script:` (four spaces,
+one `- ` item per command), so the engine's plain ${...} substitution drops them in correctly.
 """
 
 from __future__ import annotations
