@@ -1,0 +1,31 @@
+name: Feature or layer request
+description: A new layer, an engine capability, or a docs improvement
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - New layer
+        - Engine capability
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: gap
+    attributes:
+      label: What's the gap
+      description: The problem you're hitting, or the stack you can't compose yet.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you'd like
+      description: >-
+        For a new layer, name the slot and the tool (e.g. deploy / fly.io). For an engine change,
+        what should it do? A layer request that fits the contract is the easiest kind to land.
+    validations:
+      required: true
