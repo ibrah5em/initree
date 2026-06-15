@@ -19,9 +19,9 @@ The engine and the first ten layers, on PyPI.
 - [x] Repo hygiene — refreshed `CLAUDE.md`, added `CHANGELOG.md`, `CONTRIBUTING.md`, issue templates.
 - [x] Docs restructure — descriptive filenames + an index, and an mkdocs site at
       [ibrah5em.github.io/initree](https://ibrah5em.github.io/initree/).
-- [ ] Engine introspection — `initree list` (what slots and layers exist), `initree plan <recipe>` /
-      `--dry-run` (prove buildability and preview the tree without writing), a `--version` flag, and
-      sharper `resolve` errors (nearest-match on an unknown layer id, name the missing capability).
+- [x] Engine introspection — `initree list` (slots and layers), `initree new --dry-run` (prove
+      buildability and preview the tree without writing), a `--version` flag, and sharper `resolve`
+      errors (nearest-match on an unknown layer id, the owning slot for a missing key).
 - [ ] Breadth — `podman` first (it's promised in the docs and proves the docker→podman swap), then
       `node` + `express` (a third stack that exercises the `json-array` `package.json` injection no
       shipped layer uses yet).
