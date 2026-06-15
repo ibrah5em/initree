@@ -10,6 +10,6 @@ fi
 
 image="${registry.image_name_base}:$1"
 
-docker pull "$image"
-docker rm -f ${container.image_name} 2>/dev/null || true
-docker run -d --restart=always --name ${container.image_name} -p 80:${container.exposed_port} "$image"
+${container.runtime} pull "$image"
+${container.runtime} rm -f ${container.image_name} 2>/dev/null || true
+${container.runtime} run -d --restart=always --name ${container.image_name} -p 80:${container.exposed_port} "$image"

@@ -9,7 +9,9 @@ from pathlib import Path
 
 from initree.manifest import Layer
 
-LAYER = Path(__file__).resolve().parents[1] / "layers" / "vps-ssh" / "layer.yaml"
+LAYER_DIR = Path(__file__).resolve().parents[1] / "layers" / "vps-ssh"
+LAYER = LAYER_DIR / "layer.yaml"
+DEPLOY_SCRIPT = LAYER_DIR / "templates" / "deploy" / "deploy.sh"
 
 
 def _deploy_recipe(layer: Layer) -> str:
@@ -29,3 +31,13 @@ def test_deploy_recipe_pulls_and_runs_through_the_runtime_capability():
     # No tool name leaks past the capability boundary — that is what keeps the swap honest.
     assert "docker " not in recipe
     assert "podman " not in recipe
+
+
+def test_manual_deploy_script_uses_the_runtime_capability():
+    script = DEPLOY_SCRIPT.read_text()
+    # The hands-on equivalent of the CI recipe must swap the same way, or podman builds ship a
+    # deploy.sh that still runs docker.
+    assert "${container.runtime} pull" in script
+    assert "${container.runtime} run" in script
+    assert "docker " not in script
+    assert "podman " not in script
