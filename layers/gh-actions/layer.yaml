@@ -15,7 +15,7 @@ consumes:
 
 provides:
   - { key: ci.provider, type: string, value: "gh-actions" }
-  # Backend-private (docs/03 §12): the workflow's test/build/deploy step blocks, rendered from the
+  # Backend-private (docs/registry §12): the workflow's test/build/deploy step blocks, rendered from the
   # consumed recipes by the compute hook. Never consumed by another layer — only this layer's
   # own workflow template references them. ":hook" because only code can resolve the {{TOKEN}}s.
   - { key: ci.gh_actions.test_steps, type: string, value: ":hook" }

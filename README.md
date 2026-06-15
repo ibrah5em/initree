@@ -86,7 +86,7 @@ identical. The shipped layers:
 | notify    | `slack`                   |
 
 Want a stack that isn't here? Add one layer, not a whole new template. See
-[`docs/04-layer-authoring-guide.md`](docs/04-layer-authoring-guide.md).
+[`docs/authoring.md`](docs/authoring.md).
 
 ## CLI
 
@@ -128,10 +128,10 @@ there is no `docker.*` on the shared bus, only `container.*`. That is what makes
 
 The full contract is the source of truth, locked at v1:
 
-- [`docs/01-layer-contract-and-lifecycle.md`](docs/01-layer-contract-and-lifecycle.md) — the manifest schema and lifecycle, worked through one slice
-- [`docs/02-generalization-proof.md`](docs/02-generalization-proof.md) — the same engine across two unrelated stacks, and why the graph stays acyclic
-- [`docs/03-capability-registry-v1.md`](docs/03-capability-registry-v1.md) — the locked capability vocabulary
-- [`docs/04-layer-authoring-guide.md`](docs/04-layer-authoring-guide.md) — how to write your own layer
+- [`docs/lifecycle.md`](docs/lifecycle.md) — the manifest schema and lifecycle, worked through one slice
+- [`docs/generalization.md`](docs/generalization.md) — the same engine across two unrelated stacks, and why the graph stays acyclic
+- [`docs/registry.md`](docs/registry.md) — the locked capability vocabulary
+- [`docs/authoring.md`](docs/authoring.md) — how to write your own layer
 
 ## Develop
 

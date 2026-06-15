@@ -1,9 +1,9 @@
 """Golden test: slice 1 (python+fastapi+docker+gh-actions+vps-ssh) renders byte-for-byte.
 
 Locks the whole emitted tree against tests/golden/slice1/. This is the byte-exact complement to
-test_slice1.py's behavioral asserts — the concrete form of the docs/01 §6 render proof, adapted to
-the recipe-based contract (ghcr.io, uv-from-image, recipe-resolved CI). test_slice1.py says the
-right values flow; this says nothing else moved.
+test_slice1.py's behavioral asserts — the concrete form of the docs/lifecycle §6 render proof,
+adapted to the recipe-based contract (ghcr.io, uv-from-image, recipe-resolved CI). test_slice1.py
+says the right values flow; this says nothing else moved.
 
 Regenerate after an intentional render change:
 

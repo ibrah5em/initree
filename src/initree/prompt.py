@@ -1,4 +1,4 @@
-"""prompt — phase 2: collect each layer's inputs onto the bus seed (docs/01 §5).
+"""prompt — phase 2: collect each layer's inputs onto the bus seed (docs/lifecycle §5).
 
 Walks the layers in resolve's topological order and asks for every declared input, writing each
 answer onto a copy of the seed. Inputs land exactly like provided values, so a later layer's input

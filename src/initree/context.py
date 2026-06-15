@@ -1,9 +1,9 @@
-"""context — the capability bus and ${...} resolution (docs/01 §3, phase 3 `compute`).
+"""context — the capability bus and ${...} resolution (docs/lifecycle §3, phase 3 `compute`).
 
 Holds the namespaced key/value store every layer reads (`consumes`) and writes (`provides`),
 resolves `${namespace.key}` references in dependency order, then freezes. Built after resolve.
 
-Two-tier interpolation (docs/03 §1): this phase resolves the engine tier — `${namespace.key}`,
+Two-tier interpolation (docs/registry §1): this phase resolves the engine tier — `${namespace.key}`,
 a concrete value already on the bus — and deliberately leaves the `{{TOKEN}}` tier alone. Those
 deferred runtime tokens ({{IMAGE}}, {{SHA}}, {{SECRET:...}}) are the ci layer's to resolve at its
 render, because only it knows the runtime's native syntax. Secret values never enter the bus.
@@ -31,9 +31,9 @@ from typing import Any
 
 from initree.manifest import Layer
 
-# A provides value of exactly this marker means "computed by hooks.compute" (docs/01 §1): the value
-# can't be expressed declaratively, so the layer ships a script that prints it. compute runs that
-# script (see _run_compute_hook) instead of treating the literal as the value.
+# A provides value of exactly this marker means "computed by hooks.compute" (docs/lifecycle §1):
+# the value can't be expressed declaratively, so the layer ships a script that prints it. compute
+# runs that script (see _run_compute_hook) instead of treating the literal as the value.
 _HOOK_SENTINEL = ":hook"
 
 # Engine-tier reference: ${namespace.key}. Disjoint from the {{TOKEN}} tier, which has no leading $.
@@ -115,7 +115,8 @@ def compute(layers: list[Layer], order: list[str], seed: Mapping[str, Any]) -> B
 def _view_for(layer: Layer, bus: Mapping[str, Any]) -> dict[str, Any]:
     """The context this layer resolves against: the bus, plus its own defaults for optional
     consumes whose key is absent. A default is this layer's private fallback — it fills a reference
-    in this layer's provides without leaking onto the shared bus (docs/02 §3.5, slack)."""
+    in this layer's provides without leaking onto the shared bus (docs/generalization §3.5, slack).
+    """
     defaults = {
         need.key: need.default
         for need in layer.consumes
@@ -239,8 +240,8 @@ def _run_hook(layer_id: str, hook: Path, cwd: Path, env: Mapping[str, str]) -> s
         # A .py compute hook imports initree.recipe to render recipes, so it must run under the
         # interpreter that has initree installed — sys.executable, in both an installed wheel and an
         # editable checkout. Its own `#!/usr/bin/env python3` shebang would pick the system python,
-        # which has no initree. Any other executable (the escape hatch is "prints JSON", docs/01 §1)
-        # runs via its shebang. Absolute path: the hook runs with cwd=layer dir.
+        # which has no initree. Any other executable runs via its shebang (the escape hatch is
+        # "prints JSON", docs/lifecycle §1). Absolute path: the hook runs with cwd=layer dir.
         argv = (
             [sys.executable, str(hook.resolve())] if hook.suffix == ".py" else [str(hook.resolve())]
         )

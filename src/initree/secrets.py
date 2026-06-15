@@ -1,13 +1,13 @@
-"""secrets — compile INITREE_SECRETS.md from the secrets a recipe declares (docs/03 §10).
+"""secrets — compile INITREE_SECRETS.md from the secrets a recipe declares (docs/registry §10).
 
 Recipes reference secrets by *logical purpose* through deferred tokens (``{{SECRET:registry}}``,
 ``{{SECRET_FILE:kubeconfig}}``); the values themselves never enter the bus. After compute freezes
 the bus, this module scans every recipe on it for those tokens and writes a provisioning checklist —
 the operator's "set these before the first deploy" list.
 
-This is engine behaviour over declared data, not a new contract rule (docs/02 §5): it only reads
-what the recipes already declare. The token scan is recipe.scan_secrets; the purpose descriptions
-come from the registry, so the vocabulary stays single-sourced.
+This is engine behaviour over declared data, not a new contract rule (docs/generalization §5): it
+only reads what the recipes already declare. The token scan is recipe.scan_secrets; the purpose
+descriptions come from the registry, so the vocabulary stays single-sourced.
 """
 
 from __future__ import annotations

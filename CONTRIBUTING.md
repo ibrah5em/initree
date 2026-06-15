@@ -6,10 +6,10 @@ without getting heavier. Engine fixes and docs are just as welcome.
 
 Before anything else, read the contract. It's the source of truth and it's small:
 
-- [`docs/01-layer-contract-and-lifecycle.md`](docs/01-layer-contract-and-lifecycle.md) — the manifest schema and the five-phase lifecycle
-- [`docs/02-generalization-proof.md`](docs/02-generalization-proof.md) — why composition holds across two unrelated stacks
-- [`docs/03-capability-registry-v1.md`](docs/03-capability-registry-v1.md) — the locked capability vocabulary
-- [`docs/04-layer-authoring-guide.md`](docs/04-layer-authoring-guide.md) — how to write a layer, start to finish
+- [`docs/lifecycle.md`](docs/lifecycle.md) — the manifest schema and the five-phase lifecycle
+- [`docs/generalization.md`](docs/generalization.md) — why composition holds across two unrelated stacks
+- [`docs/registry.md`](docs/registry.md) — the locked capability vocabulary
+- [`docs/authoring.md`](docs/authoring.md) — how to write a layer, start to finish
 
 `CLAUDE.md` is the short version of the architecture and the non-negotiable invariants.
 
@@ -40,7 +40,7 @@ a linter can't enforce is in [`.claude/rules/code-style.md`](.claude/rules/code-
 
 ## Adding a layer
 
-Start from [`docs/04-layer-authoring-guide.md`](docs/04-layer-authoring-guide.md) — it walks a
+Start from [`docs/authoring.md`](docs/authoring.md) — it walks a
 recipe-only layer, an owning layer, and the injection-vs-recipe call. The short version:
 
 - A layer is a folder under `layers/<id>/` with a `layer.yaml` manifest and its templates.

@@ -1,6 +1,6 @@
 """Slice 2 end-to-end: build go+gin+docker+gitlab-ci+k8s+slack from the real layers/.
 
-The generalization proof made concrete (docs/02). A stack that differs from slice 1 in every
+The generalization proof (docs/generalization). A stack that differs from slice 1 in every
 dimension — compiled language, multi-stage container, a different CI structure, a namespaced deploy
 target, and an optional notify slot — composes through the same engine and the same docker layer.
 app.port flows from gin through container.exposed_port into the k8s manifests; gin's dependency
@@ -141,9 +141,9 @@ def test_secret_purposes_are_compiled_from_the_recipes(tmp_path):
 
 
 def test_docker_is_the_same_manifest_that_serves_slice_1(tmp_path):
-    # The swap-radius proof (docs/02 §8): docker's manifest is byte-identical across slices. It
-    # declares the build keys as OPTIONAL consumes, so one manifest handles both interpreted
-    # (absent) and compiled (present) languages; only the owned Dockerfile branches.
+    # The swap-radius proof (docs/generalization §8): docker's manifest is byte-identical across
+    # slices. It declares the build keys as OPTIONAL consumes, so one manifest handles both
+    # interpreted (absent) and compiled (present) languages; only the owned Dockerfile branches.
     docker = Layer.from_yaml(LAYERS / "docker" / "layer.yaml")
     optional = {c.key for c in docker.consumes if not c.required}
     assert {"runtime.build_cmd", "runtime.artifact", "runtime.run_base_image"} <= optional

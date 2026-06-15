@@ -1,4 +1,4 @@
-"""finalize — phase 5: run each layer's finalize hook (docs/01 §5).
+"""finalize — phase 5: run each layer's finalize hook (docs/lifecycle §5).
 
 The last phase, and the only one that runs layer-authored code. A layer that needs a real-world
 side effect the declarative contract can't express — ``chmod +x`` a script, ``git init``,

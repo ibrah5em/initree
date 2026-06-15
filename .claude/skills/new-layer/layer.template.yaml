@@ -1,6 +1,6 @@
 # layer.yaml — initree layer contract (annotated skeleton)
 # Fill every section. Delete the sections that genuinely do not apply to this layer.
-# Full schema: docs/01-layer-contract-and-lifecycle.md. Vocabulary: docs/03 + capability-registry skill.
+# Full schema: docs/lifecycle.md. Vocabulary: docs/registry + capability-registry skill.
 
 apiVersion: initree.dev/v1
 id: <layer-id>            # e.g. "fly-io"

@@ -1,7 +1,7 @@
 # initree — layer authoring guide
 
-How to write a layer. This is the practical companion to the spec: `docs/01` is the manifest schema
-and lifecycle, `docs/03` is the capability vocabulary. Read those for *why*; read this for *how*.
+How to write a layer. This is the practical companion to the spec: `docs/lifecycle` is the manifest schema
+and lifecycle, `docs/registry` is the capability vocabulary. Read those for *why*; read this for *how*.
 
 A layer is a folder with a `layer.yaml` and, usually, a `templates/` tree. The engine reads only the
 manifest to plan a build — templates and hooks come into play later. The whole job of a layer is to
@@ -48,12 +48,12 @@ owns: []
 Three things to notice, because they're the whole model:
 
 - **It provides only in its slot's namespace.** `notify` provides `notify.*` and nothing else. A
-  layer that writes outside its namespace fails `resolve`. The ownership map is `docs/03` §3.
+  layer that writes outside its namespace fails `resolve`. The ownership map is `docs/registry` §3.
 - **It consumes capability keys, not tool keys.** `deploy.summary` is the same whether the deploy
   layer is `k8s` or `vps-ssh`. The notifier never knows which.
 - **The runtime secret is a token, not a value.** `{{SECRET:discord_webhook}}` is deferred — the ci
   slot resolves it to a native masked variable at its render. The webhook value never enters the bus.
-  A new secret purpose has to be added to the registry (`docs/03` §10) and it shows up automatically
+  A new secret purpose has to be added to the registry (`docs/registry` §10) and it shows up automatically
   in the generated `INITREE_SECRETS.md`.
 
 That's a complete, buildable layer. Drop it in `layers/discord/` and use it:
@@ -133,7 +133,7 @@ injects:
 ```
 
 Injection is additive — it never overwrites. Formats: `toml-array`, `yaml-seq`, `json-array`,
-`text-block`, `line`. The target `id` must be a canonical point (`docs/03` §11) or one the owner
+`text-block`, `line`. The target `id` must be a canonical point (`docs/registry` §11) or one the owner
 declares.
 
 **Recipe** — when the content's *structure is backend-specific*. A CI job block is written in GitLab
@@ -191,7 +191,7 @@ part of a slice, add it to the byte-exact golden tests under `tests/golden/` so 
 
 ## Before you open a PR
 
-Run the conformance check for your slot — the per-slot MUST/SHOULD/MAY list is `docs/03` §13. Quick
+Run the conformance check for your slot — the per-slot MUST/SHOULD/MAY list is `docs/registry` §13. Quick
 gut check:
 
 - Provides land only in your slot's namespace; private state is under `namespace.<backend>.*` and
@@ -199,6 +199,6 @@ gut check:
 - You consume capability keys, never tool-named ones — no `docker.*`, no `gitlab.*`.
 - Backend-specific structure goes out as a recipe; only backend-stable format is injected.
 - Any new secret purpose, recipe token, or injection point is added to the registry and follows the
-  versioning policy (`docs/03` §16).
+  versioning policy (`docs/registry` §16).
 
 Then `/check-contract` runs the contract-guardian over your changes.

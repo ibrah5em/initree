@@ -4,7 +4,7 @@ Loads the valid-full manifests (which declare the recipe-typed keys: container.b
 deploy.apply_recipe, notify.send_recipe) and pairs them with a synthetic frozen bus carrying those
 recipes with their {{SECRET:...}} tokens still deferred — the state after compute. The report is an
 observer over that bus: it reads the purposes the recipes declare and leaves token validation to the
-ci render. Purposes mirror docs/02 §5 and the registry's secret_purposes table.
+ci render. Purposes mirror docs/generalization §5 and the registry's secret_purposes table.
 """
 
 from pathlib import Path

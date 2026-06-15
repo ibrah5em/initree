@@ -9,7 +9,7 @@ requires:
     - { slot: language, one_of: [python] }
 
 inputs:
-  # app.module is a private input — it derives app.start_command, it is not a shared key (docs/03 §6).
+  # app.module is a private input — it derives app.start_command, it is not a shared key (docs/registry §6).
   - { key: app.module, prompt: "ASGI app path", type: string, default: "app.main:app" }
   - { key: app.port, prompt: "App port", type: int, default: 8000 }
 

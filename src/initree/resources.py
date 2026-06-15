@@ -26,6 +26,6 @@ def layers_dir() -> Path:
 
 
 def registry_path() -> Path:
-    """The capability registry YAML — the locked vocabulary loaded as data (docs/03)."""
+    """The capability registry YAML — the locked vocabulary loaded as data (docs/registry)."""
     checkout = _REPO_ROOT / ".claude" / "skills" / "capability-registry" / "capabilities.yaml"
     return checkout if checkout.is_file() else _BUNDLED / "capabilities.yaml"

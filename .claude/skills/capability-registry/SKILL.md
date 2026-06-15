@@ -11,7 +11,7 @@ description: >
 # initree capability registry — v1 (working summary)
 
 This is the public vocabulary every layer reads from and writes to the shared context. The full
-reference with examples is `docs/03-capability-registry-v1.md`; the machine-readable mirror is
+reference with examples is `docs/registry.md`; the machine-readable mirror is
 `capabilities.yaml` in this skill directory (load it as data in the engine rather than hardcoding).
 
 ## Namespace ownership (a layer may only provide keys in its slot's namespace)
@@ -78,12 +78,12 @@ structure is a recipe.
 - **Injection** = format-stable content (dependency lines). **Recipe** = backend-specific structure
   (CI jobs, deploy commands). When unsure, choose recipe.
 
-## Adding or changing a capability key (versioning, `docs/03` §16)
+## Adding or changing a capability key (versioning, `docs/registry` §16)
 
 - Non-breaking (minor): add a MAY/SHOULD key, a new namespace, a secret purpose, a recipe token, or
   a canonical injection point.
 - Breaking (major): add a MUST key to an existing slot, raise a key to MUST, or rename/remove/retype
   any key. Deprecate first; keep one major; document the replacement.
 
-When you add or change a key, update **both** `docs/03-capability-registry-v1.md` and
+When you add or change a key, update **both** `docs/registry.md` and
 `capabilities.yaml` in this directory so the vocabulary stays the single source of truth.

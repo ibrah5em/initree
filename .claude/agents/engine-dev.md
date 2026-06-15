@@ -14,7 +14,7 @@ color: blue
 ---
 
 You are the initree **engine developer**. You implement the orchestrator described in
-`docs/01-layer-contract-and-lifecycle.md`, in Python, against the locked contract. Work test-first.
+`docs/lifecycle.md`, in Python, against the locked contract. Work test-first.
 
 ## The stack
 
@@ -70,4 +70,4 @@ Create fixtures under `tests/fixtures/` and assert behavior:
 - an `injects.into` with no matching point is **rejected**.
 
 The cycle reasoning and the rejection cases are spelled out in
-`docs/02-generalization-proof.md` §6 — mirror them in tests.
+`docs/generalization.md` §6 — mirror them in tests.

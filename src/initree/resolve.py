@@ -1,10 +1,10 @@
-"""resolve — phase 1, the buildability proof (docs/01 §5).
+"""resolve — phase 1, the buildability proof (docs/lifecycle §5).
 
 Runs the static checks over a loaded recipe and returns the layer ids in topological order, or
 raises a ResolveError subclass naming the first violation. No files are written here — that is the
 whole point of resolve: prove the recipe is buildable before emit touches the filesystem.
 
-The checks (docs/01 §5, mapped onto the registry §3/§11/§13):
+The checks (docs/lifecycle §5, mapped onto the registry §3/§11/§13):
   - every `requires.slots` is filled (and one_of holds)  -> UnsatisfiedRequirementError
   - no two layers' `owns` globs overlap                  -> OwnsOverlapError
   - every required `consumes` has a provider             -> MissingProviderError
@@ -31,7 +31,8 @@ class ResolveError(Exception):
 
 
 class OwnsOverlapError(ResolveError):
-    """Two layers claim ownership of the same file. Single-ownership is absolute (docs/01 §0)."""
+    """Two layers claim ownership of the same file. Single-ownership is absolute
+    (docs/lifecycle §0)."""
 
 
 class MissingProviderError(ResolveError):

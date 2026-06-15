@@ -1,4 +1,4 @@
-"""registry — the locked capability vocabulary, loaded as data (docs/03).
+"""registry — the locked capability vocabulary, loaded as data (docs/registry).
 
 The registry is the single source of truth for the shared contract; hardcoding any of it here
 would let the vocabulary drift. So the engine reads it from
@@ -32,7 +32,8 @@ def _load() -> dict[str, Any]:
 def engine_seeded_keys() -> frozenset[str]:
     """Keys present on the bus before any layer runs — the ``project.*`` and ``git.*`` namespaces.
 
-    A required ``consumes`` of one of these needs no providing layer (docs/01 §0, docs/03 §4).
+    A required ``consumes`` of one of these needs no providing layer
+    (docs/lifecycle §0, docs/registry §4).
     """
     data = _load()
     return frozenset(entry["key"] for entry in data["keys"] if entry.get("owner") == "engine")
@@ -40,7 +41,7 @@ def engine_seeded_keys() -> frozenset[str]:
 
 @lru_cache(maxsize=1)
 def secret_purposes() -> dict[str, str]:
-    """Each declared secret purpose mapped to its human-readable note (docs/03 §10).
+    """Each declared secret purpose mapped to its human-readable note (docs/registry §10).
 
     The provisioning report (INITREE_SECRETS.md) renders an observed purpose with this note, so the
     registry stays the one place the secret vocabulary and its descriptions live.
