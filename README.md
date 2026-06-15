@@ -1,49 +1,53 @@
 # initree
 
-A composition orchestrator for project scaffolding. It builds a project by composing small,
-independent **layers** — language, framework, container, ci, deploy, notify — that exchange data
-through a typed capability bus. Breadth comes from composing N+M+K layers, not from maintaining
-N×M×K templates.
+[![PyPI](https://img.shields.io/pypi/v/initree.svg)](https://pypi.org/project/initree/)
+[![Python](https://img.shields.io/pypi/pyversions/initree.svg)](https://pypi.org/project/initree/)
+[![CI](https://github.com/ibrah5em/initree/actions/workflows/ci.yml/badge.svg)](https://github.com/ibrah5em/initree/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-```
-initree new myapp --recipe go+gin+docker+gitlab-ci+k8s+slack
+**Compose a project from layers, not from templates.**
+
+Every "universal scaffolder" eventually dies the same way: someone wants Go instead of Python, GitLab
+instead of GitHub, Kubernetes instead of a VPS — and now you maintain a template for every
+combination. N languages × M CI systems × K deploy targets. The grid explodes and the project rots.
+
+initree refuses to play that game. It ships small, independent **layers** — language, framework,
+container, ci, deploy, notify — and builds your project by composing them. Breadth is N + M + K
+layers you add up, never N × M × K templates you maintain.
+
+```bash
+# same six slots, two completely different stacks — you recompose the recipe, nothing else
+initree new api --recipe python+fastapi+docker+gh-actions+vps-ssh
+initree new api --recipe go+gin+docker+gitlab-ci+k8s+slack
 ```
 
-Swap one slot and nothing else moves. A consumer binds to a capability key (`container.exposed_port`),
-never to the tool that produced it, so docker→podman or gh-actions→gitlab-ci touches no other layer.
+The trick is that layers never talk to each other directly. They exchange data over a typed
+**capability bus**. The deploy layer asks for `container.exposed_port` — it has never heard of Docker.
+So swapping `docker` → `podman`, or `gh-actions` → `gitlab-ci`, changes that one layer and touches
+nothing else.
 
 ## Install
 
-```
+```bash
 uv tool install initree      # or: pipx install initree
 ```
 
-Then `initree` is on your PATH. To run it without installing:
+`initree` is now on your PATH. To try it without installing anything:
 
-```
+```bash
 uvx initree new myapp --recipe python+fastapi+docker+gh-actions+vps-ssh
 ```
 
-## Usage
+## Quick start
 
 A recipe is slot layers joined by `+`. `initree new <name> --recipe <recipe>` validates the
-composition, prompts for each layer's inputs, then writes the project.
+composition first, prompts for each layer's inputs, then writes the project.
 
-Slice 1 — a deployable FastAPI service:
-
-```
-initree new myapp --recipe python+fastapi+docker+gh-actions+vps-ssh
-```
-
-Slice 2 — a Go service on a second CI dialect with a namespaced deploy and an optional notifier:
-
-```
+```bash
 initree new myapp --recipe go+gin+docker+gitlab-ci+k8s+slack
 ```
 
-What the Go recipe writes:
-
-```
+```text
 created ./myapp
   order: go -> gin -> docker -> k8s -> slack -> gitlab-ci
   + .gitignore
@@ -59,27 +63,34 @@ created ./myapp
   secrets: INITREE_SECRETS.md (provision before first deploy)
 ```
 
-`INITREE_SECRETS.md` is a provisioning checklist generated from the secret purposes the recipe's
-layers declare (registry credentials, an SSH key, a Slack webhook). No secret value ever enters the
-build — the file tells you what to set, where.
+You get a working Go service, a multi-stage Dockerfile, Kubernetes manifests, a GitLab pipeline that
+builds and deploys, and a Slack notification on success — each from a layer that knows nothing about
+the others.
 
-### Recipes are subsets, not fixed tuples
+`INITREE_SECRETS.md` is a provisioning checklist built from the secret *purposes* the recipe's layers
+declare — for this recipe: registry credentials and a Slack webhook URL. No secret value ever enters
+the build. The file tells you what to set in your CI store, and why, before the first deploy.
 
-Pick one layer per slot you need. `notify` is optional; drop it and the rest is unchanged. The
-shipped layers:
+## Recipes are subsets, not fixed tuples
 
-| slot      | layers                |
-|-----------|-----------------------|
-| language  | `python`, `go`        |
-| framework | `fastapi`, `gin`      |
-| container | `docker`              |
+Pick one layer per slot you actually need. `notify` is optional — drop `slack` and the rest is
+identical. The shipped layers:
+
+| slot      | layers                    |
+|-----------|---------------------------|
+| language  | `python`, `go`            |
+| framework | `fastapi`, `gin`          |
+| container | `docker`                  |
 | ci        | `gh-actions`, `gitlab-ci` |
-| deploy    | `vps-ssh`, `k8s`      |
-| notify    | `slack`               |
+| deploy    | `vps-ssh`, `k8s`          |
+| notify    | `slack`                   |
 
-### CLI
+Want a stack that isn't here? Add one layer, not a whole new template. See
+[`docs/04-layer-authoring-guide.md`](docs/04-layer-authoring-guide.md).
 
-```
+## CLI
+
+```text
 initree new NAME --recipe RECIPE [options]
 
   --recipe TEXT       slot layers joined by '+'   (required)
@@ -90,38 +101,49 @@ initree new NAME --recipe RECIPE [options]
   --layers-dir PATH   load layers from here       (default: the bundled layers)
 ```
 
-`--set` is how you script a build: `--no-input --set app.port=9000 --set deploy.host=user@host`.
+`--set` is how you script a non-interactive build:
+
+```bash
+initree new myapp --recipe python+fastapi+docker+gh-actions+vps-ssh \
+  --no-input --set app.port=9000 --set deploy.vps.host=deploy@1.2.3.4
+```
 
 ## How it works
 
-The engine runs five global phases; layers run in topological order, each uninterrupted:
+The engine runs five global phases. Within each, layers run in topological order, one at a time:
 
-1. **resolve** — load manifests, prove the recipe is buildable (no `owns` overlap, every required
-   `consumes` has a provider, every injection target exists, the graph is acyclic), compute order.
-   No files written.
+1. **resolve** — load the manifests and prove the recipe is buildable *before any file is written*:
+   no two layers own the same file, every required `consumes` has a provider, every injection target
+   exists, and the dependency graph is acyclic. An invalid recipe is rejected here, cleanly.
 2. **prompt** — collect each layer's `inputs`.
 3. **compute** — resolve every `provides` (`${namespace.key}` interpolation), then freeze the bus.
 4. **emit** — render each layer's owned templates, then splice injected fragments into their owner's
    file at the declared anchor.
 5. **finalize** — per-layer hooks.
 
-Each file has exactly one owning layer. The only way another layer adds to a file is a named
-injection point the owner declares. The full contract lives in `docs/`:
+Two rules keep it honest. **Each file has exactly one owning layer** — the only way another layer
+adds to a file is through a named injection point the owner declares (a dependency line in
+`pyproject.toml`, a step in a CI workflow). And **a layer binds to a capability, never to a tool** —
+there is no `docker.*` on the shared bus, only `container.*`. That is what makes a slot swappable.
 
-- `docs/01-layer-contract-and-lifecycle.md` — the manifest schema and the lifecycle, worked through one slice
-- `docs/02-generalization-proof.md` — the same engine across two unrelated stacks, and why the graph stays acyclic
-- `docs/03-capability-registry-v1.md` — the locked capability vocabulary
-- `docs/04-layer-authoring-guide.md` — how to write your own layer
+The full contract is the source of truth, locked at v1:
+
+- [`docs/01-layer-contract-and-lifecycle.md`](docs/01-layer-contract-and-lifecycle.md) — the manifest schema and lifecycle, worked through one slice
+- [`docs/02-generalization-proof.md`](docs/02-generalization-proof.md) — the same engine across two unrelated stacks, and why the graph stays acyclic
+- [`docs/03-capability-registry-v1.md`](docs/03-capability-registry-v1.md) — the locked capability vocabulary
+- [`docs/04-layer-authoring-guide.md`](docs/04-layer-authoring-guide.md) — how to write your own layer
 
 ## Develop
 
-```
+```bash
 uv sync
 uv run pytest
-uv run ruff check src tests
+uv run ruff check src tests layers
 uv run pyright
 ```
 
 ## License
 
-MIT — see `LICENSE`.
+MIT — see [`LICENSE`](LICENSE).
+</content>
+</invoke>
