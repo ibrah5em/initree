@@ -8,6 +8,7 @@ checks and the topological order are resolve.py's job. This module only parses a
 
 from __future__ import annotations
 
+from difflib import get_close_matches
 from pathlib import Path
 from typing import Any, Literal
 
@@ -127,8 +128,23 @@ def load_selected(layers_root: Path, ids: list[str]) -> list[Layer]:
     for layer_id in ids:
         path = layers_root / layer_id / "layer.yaml"
         if not path.is_file():
-            raise FileNotFoundError(
-                f"recipe names layer '{layer_id}', but no manifest exists at {path}"
-            )
+            raise FileNotFoundError(_unknown_layer_message(layer_id, layers_root))
         layers.append(Layer.from_yaml(path))
     return layers
+
+
+def available_layer_ids(layers_root: Path) -> list[str]:
+    """The layer ids discoverable under ``layers_root`` (each ``<id>/layer.yaml``), sorted."""
+    return sorted(path.parent.name for path in layers_root.glob("*/layer.yaml"))
+
+
+def _unknown_layer_message(layer_id: str, layers_root: Path) -> str:
+    available = available_layer_ids(layers_root)
+    close = get_close_matches(layer_id, available, n=1)
+    if close:
+        hint = f"; did you mean '{close[0]}'?"
+    elif available:
+        hint = f"; available: {', '.join(available)}"
+    else:
+        hint = ""
+    return f"recipe names layer '{layer_id}', but no manifest exists under {layers_root}{hint}"

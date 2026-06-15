@@ -15,6 +15,8 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- `resolve` errors now point at the fix: a missing required key names the slot that provides it,
+  and an unknown layer id in a recipe suggests the closest available layer.
 - CI layers derive their test and deploy jobs from capabilities on the bus instead of hardcoding
   them per language and deploy target, so `gh-actions` and `gitlab-ci` no longer carry stack-coupled
   job blocks (#48, closes #44).

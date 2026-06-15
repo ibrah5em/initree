@@ -149,6 +149,16 @@ def test_new_fails_clearly_on_a_missing_layer(tmp_path):
     assert not (tmp_path / "out").exists()
 
 
+def test_new_suggests_a_close_layer_id_on_a_typo(tmp_path):
+    result = runner.invoke(
+        app,
+        ["new", "x", "--recipe", "pythn", "--out", str(tmp_path / "o"), "--no-input"],
+    )
+
+    assert result.exit_code == 1
+    assert "did you mean 'python'?" in result.output
+
+
 def test_new_rejects_an_empty_recipe(tmp_path):
     result = runner.invoke(
         app, ["new", "myapp", "--recipe", "", "--out", str(tmp_path / "out"), "--no-input"]
