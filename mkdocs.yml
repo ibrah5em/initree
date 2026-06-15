@@ -1,0 +1,53 @@
+site_name: initree
+site_description: Compose a project from layers, not from templates.
+site_url: https://ibrah5em.github.io/initree/
+repo_url: https://github.com/ibrah5em/initree
+repo_name: ibrah5em/initree
+edit_uri: edit/main/docs/
+copyright: MIT licensed
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.top
+    - navigation.tracking
+    - content.code.copy
+    - content.action.edit
+    - search.highlight
+    - search.suggest
+    - toc.follow
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+
+nav:
+  - Home: README.md
+  - Lifecycle & contract: lifecycle.md
+  - Generalization proof: generalization.md
+  - Capability registry: registry.md
+  - Authoring layers: authoring.md
+  - Roadmap: roadmap.md

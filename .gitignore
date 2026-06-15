@@ -24,6 +24,9 @@ dist/
 *.egg-info/
 *.egg
 
+# mkdocs site build output
+site/
+
 # Testing & Linting Cache (TDD)
 .pytest_cache/
 .coverage

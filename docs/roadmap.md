@@ -1,7 +1,8 @@
 # initree — roadmap
 
 Where the project is and where it's headed. For how 0.1.0 came together task by task, the git history
-and [`CHANGELOG.md`](../CHANGELOG.md) are the record; this file looks forward.
+and [`CHANGELOG.md`](https://github.com/ibrah5em/initree/blob/main/CHANGELOG.md) are the record;
+this file looks forward.
 
 ## Shipped — 0.1.0
 
@@ -34,4 +35,4 @@ The engine and the first ten layers, on PyPI.
 ## How work lands
 
 One concern per PR, squash-merged, `main` stays linear. A new engine behaviour gets a test that fails
-first. The details are in [`CONTRIBUTING.md`](../CONTRIBUTING.md).
+first. The details are in [`CONTRIBUTING.md`](https://github.com/ibrah5em/initree/blob/main/CONTRIBUTING.md).
