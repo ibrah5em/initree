@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Docs and contract
+    url: https://github.com/ibrah5em/initree/tree/main/docs
+    about: The lifecycle, the capability registry, and the layer authoring guide.

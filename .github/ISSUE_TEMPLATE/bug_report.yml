@@ -1,0 +1,31 @@
+name: Bug report
+description: Something the engine or a layer does wrong
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What went wrong, and what you expected instead.
+    validations:
+      required: true
+  - type: input
+    id: recipe
+    attributes:
+      label: Recipe
+      description: The full --recipe string, if a build was involved.
+      placeholder: python+fastapi+docker+gh-actions+vps-ssh
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact command(s), and the error output if there was one.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: Version and install
+      description: Which initree version, and how you installed it.
+      placeholder: "0.1.0, uv tool install initree"
+    validations:
+      required: true
