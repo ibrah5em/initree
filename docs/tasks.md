@@ -17,8 +17,10 @@ engine addition slice 2 needed was a backend-branching template conditional (`in
 `emit`), so docker's single owned Dockerfile renders multi-stage for go and single-stage for python
 without the engine learning either stack. Both slices now have a byte-exact golden test
 (`tests/test_golden_slice1.py` / `tests/test_golden_slice2.py`) locking their whole emitted tree
-against `tests/golden/` — the concrete form of the docs/01 §6 and docs/02 §7 render proofs. Next is
-the CLI smoke test, then the release tasks.
+against `tests/golden/` — the concrete form of the docs/01 §6 and docs/02 §7 render proofs. The CLI
+entry point now has its own smoke test (`tests/test_cli_smoke.py`) driving `initree new` over both
+real recipes into a temp dir with no fixtures — the slice tests call `build()` directly, this proves
+the production binary path. Next are the release tasks.
 
 ## Foundations
 
@@ -68,7 +70,7 @@ the CLI smoke test, then the release tasks.
 
 29. [x] Golden test: slice 1 builds and matches the rendered output in `docs/01` §6
 30. [x] Golden test: slice 2 builds and matches the rendered output in `docs/02` §7
-31. [ ] CLI smoke test: `initree new` into a temp dir on a real recipe, no fixtures
+31. [x] CLI smoke test: `initree new` into a temp dir on a real recipe, no fixtures
 
 ## Release
 
