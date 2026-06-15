@@ -42,11 +42,12 @@ jobs:
       - name: Build site
         run: uv run --no-sync mkdocs build --strict
 
+      # Pages must already be enabled with "GitHub Actions" as the source (Settings > Pages, or
+      # `gh api -X POST repos/OWNER/REPO/pages -f build_type=workflow`). The workflow token can't
+      # create the Pages site itself, so enablement is a one-time owner step, not done here.
       - name: Configure Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload artifact
         if: github.event_name != 'pull_request'
