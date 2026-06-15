@@ -6,6 +6,10 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `initree --version` prints the installed version.
+
 ### Changed
 
 - CI layers derive their test and deploy jobs from capabilities on the bus instead of hardcoding

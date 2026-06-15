@@ -15,7 +15,7 @@ from typing import Any, NoReturn
 
 import typer
 
-from initree import resources
+from initree import __version__, resources
 from initree.context import ComputeError
 from initree.emit import EmitError
 from initree.finalize import FinalizeError
@@ -27,8 +27,22 @@ from initree.resolve import ResolveError
 app = typer.Typer(help="Compose a project from independent layers.", no_args_is_help=True)
 
 
+def _version_callback(value: bool) -> None:
+    if value:
+        typer.echo(f"initree {__version__}")
+        raise typer.Exit()
+
+
 @app.callback()
-def _root() -> None:
+def _root(
+    version: bool = typer.Option(
+        False,
+        "--version",
+        callback=_version_callback,
+        is_eager=True,
+        help="Show the version and exit.",
+    ),
+) -> None:
     """Keep `new` a named subcommand — without a callback Typer collapses the single command."""
 
 
