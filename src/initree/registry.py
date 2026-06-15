@@ -2,7 +2,8 @@
 
 The registry is the single source of truth for the shared contract; hardcoding any of it here
 would let the vocabulary drift. So the engine reads it from
-``.claude/skills/capability-registry/capabilities.yaml`` (CLAUDE.md) instead.
+``.claude/skills/capability-registry/capabilities.yaml`` (CLAUDE.md) instead. ``resources``
+resolves that path — the checkout copy in a dev tree, the bundled copy in an installed wheel.
 
 resolve only needs one thing from the registry: which keys the engine seeds onto the bus before
 any layer runs, so a consumer of e.g. ``project.name`` is satisfied without a providing layer.
@@ -12,27 +13,19 @@ Later phases (compute/emit) will read more from the same loaded data.
 from __future__ import annotations
 
 from functools import lru_cache
-from pathlib import Path
 from typing import Any
 
 from ruamel.yaml import YAML
 
-# src/initree/registry.py -> repo root is two parents above the package dir. The registry lives
-# under .claude/ by design (the documented source of truth), not inside the installed package.
-_REGISTRY_PATH = (
-    Path(__file__).resolve().parents[2]
-    / ".claude"
-    / "skills"
-    / "capability-registry"
-    / "capabilities.yaml"
-)
+from initree import resources
 
 
 @lru_cache(maxsize=1)
 def _load() -> dict[str, Any]:
-    if not _REGISTRY_PATH.exists():
-        raise FileNotFoundError(f"capability registry not found at {_REGISTRY_PATH}")
-    return YAML(typ="safe").load(_REGISTRY_PATH.read_text())
+    path = resources.registry_path()
+    if not path.exists():
+        raise FileNotFoundError(f"capability registry not found at {path}")
+    return YAML(typ="safe").load(path.read_text())
 
 
 @lru_cache(maxsize=1)

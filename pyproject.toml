@@ -29,6 +29,17 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/initree"]
 
+# The layers and the capability registry are the engine's runtime data but live outside the package
+# (repo root / .claude) as the dev source of truth. Copy them into the wheel under _bundled/ so an
+# installed `initree` is self-contained; resources.py prefers the checkout copy and falls back here.
+[tool.hatch.build.targets.wheel.force-include]
+"layers" = "initree/_bundled/layers"
+".claude/skills/capability-registry/capabilities.yaml" = "initree/_bundled/capabilities.yaml"
+
+# The sdist mirrors the wheel's bundled data so `pip install` from source (no checkout) also works.
+[tool.hatch.build.targets.sdist]
+include = ["src/initree", "layers", ".claude/skills/capability-registry/capabilities.yaml", "docs", "README.md"]
+
 [tool.ruff]
 line-length = 100
 src = ["src", "tests"]

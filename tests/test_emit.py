@@ -284,6 +284,23 @@ def test_emit_rejects_a_render_outside_the_layers_owns(tmp_path):
         emit([rogue], ["rogue"], Bus({}), tmp_path / "out")
 
 
+def test_emit_skips_pycache_left_by_install_time_byte_compilation(tmp_path):
+    # pip byte-compiles a template .py at install, dropping app/__pycache__/main.<tag>.pyc next to
+    # it. That bytecode is not a template; emit must skip it instead of reading it as text.
+    src = _template(tmp_path / "py", "app/main.py", "print('hi')")
+    pyc = src / "templates" / "app" / "__pycache__" / "main.cpython-312.pyc"
+    pyc.parent.mkdir(parents=True)
+    pyc.write_bytes(b"\xcb\x0d\x0d\x0a not utf-8")
+    layer = _layer("py", "language", owns=["app/**"], source_dir=src)
+    out = tmp_path / "out"
+
+    written = emit([layer], ["py"], Bus({}), out)
+
+    assert (out / "app" / "main.py").read_text() == "print('hi')"
+    assert not (out / "app" / "__pycache__").exists()
+    assert all("__pycache__" not in p.as_posix() for p in written)
+
+
 def test_emit_rejects_two_writers_of_the_same_path(tmp_path):
     first = _template(tmp_path / "first", "shared.txt", "a")
     second = _template(tmp_path / "second", "shared.txt", "b")
