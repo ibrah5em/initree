@@ -30,4 +30,4 @@ notify:
   stage: notify
   when: on_success
   script:
-    - curl -sf -X POST -H 'Content-type:application/json' --data '{"text":"✅ myapp deployed — kubernetes · ns/default · 2 replicas https://"}' $SLACK_WEBHOOK
+    - curl -sf -X POST -H 'Content-type:application/json' --data '{"text":"✅ myapp deployed — kubernetes · ns/default · 2 replicas "}' $SLACK_WEBHOOK

@@ -22,7 +22,10 @@ provides:
   - { key: deploy.target, type: string, value: "kubernetes" }
   - { key: deploy.summary, type: string,
       value: "kubernetes · ns/${deploy.k8s.namespace} · ${deploy.k8s.replicas} replicas" }
-  - { key: deploy.url, type: string, value: "https://${deploy.k8s.host}" }
+  # deploy.url is public — the notify slot appends it. It's honest only when an ingress host is set;
+  # the default (no host) must be "", not "https://" with a dangling scheme (#43). The ${...} tier
+  # has no conditional, so a compute hook resolves it (vps-ssh provides "" the same way, declaratively).
+  - { key: deploy.url, type: string, value: ":hook" }
   # {{IMAGE}} stays deferred for the ci layer; ${...} is concrete after compute.
   - key: deploy.apply_recipe
     type: recipe
@@ -33,3 +36,6 @@ provides:
 
 owns:
   - "k8s/**"
+
+hooks:
+  compute: hooks/compute.py
