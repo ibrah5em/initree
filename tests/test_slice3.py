@@ -78,6 +78,7 @@ def test_secret_purposes_are_compiled_from_the_build_recipe(tmp_path):
     result, out = _build(tmp_path)
     report = result.secrets_report
     assert report == out / "INITREE_SECRETS.md"
+    assert report is not None
     text = report.read_text()
     assert "`registry`" in text
     assert "`registry_user`" in text
