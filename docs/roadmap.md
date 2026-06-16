@@ -14,7 +14,9 @@ The engine and the first ten layers, on PyPI.
   `vps-ssh`/`k8s`, `slack`.
 - Two reference recipes locked byte-for-byte by golden tests.
 
-## Now — toward 0.2.0
+## Shipped — 0.2.0
+
+Thirteen layers and a sharper CLI, on PyPI.
 
 - [x] Repo hygiene — refreshed `CLAUDE.md`, added `CHANGELOG.md`, `CONTRIBUTING.md`, issue templates.
 - [x] Docs restructure — descriptive filenames + an index, and an mkdocs site at
@@ -22,10 +24,9 @@ The engine and the first ten layers, on PyPI.
 - [x] Engine introspection — `initree list` (slots and layers), `initree new --dry-run` (prove
       buildability and preview the tree without writing), a `--version` flag, and sharper `resolve`
       errors (nearest-match on an unknown layer id, the owning slot for a missing key).
-- [ ] Breadth — `podman` first (it's promised in the docs and proves the docker→podman swap), then
-      `node` + `express` (a third stack that exercises the `json-array` `package.json` injection no
-      shipped layer uses yet).
-- [ ] Cut 0.2.0.
+- [x] Breadth — `podman` (proves the docker→podman swap touches no other layer) and `node` +
+      `express` (a third stack that exercises the `json-array` `package.json` injection), on the back
+      of a `runtime.image_prep` capability that makes the single-stage container language-agnostic.
 
 ## Later
 

@@ -6,8 +6,17 @@ All notable changes to this project are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-16
+
 ### Added
 
+- `podman` container layer — a drop-in for `docker` on the same `container.*` contract, the concrete
+  proof that swapping the container slot touches no other layer. A swap-radius test locks the delta
+  to the container slot (#65).
+- `node` (language) + `express` (framework) — a third stack, and the first to exercise the
+  `json-array` `package.json` dependency injection the engine supported but no layer used (#67).
+- `runtime.image_prep` capability, so a single-stage container build splices the language's own
+  image setup instead of the container layer hardcoding it (#66).
 - `initree new --dry-run` resolves and renders the recipe into a throwaway directory, reports the
   file tree it would write, and leaves the destination untouched.
 - `initree list` shows the available layers grouped by slot.
@@ -15,6 +24,11 @@ All notable changes to this project are recorded here. The format follows
 
 ### Changed
 
+- `vps-ssh` pulls and runs the image with `container.runtime` rather than a hardcoded `docker`, in
+  both the deploy recipe and the manual deploy script, so a docker→podman swap reaches the host
+  (#63, #64).
+- The container single-stage build no longer bakes in python's `uv` setup; the language carries it
+  through `runtime.image_prep`, leaving the container layer language-agnostic (#66).
 - `resolve` errors now point at the fix: a missing required key names the slot that provides it,
   and an unknown layer id in a recipe suggests the closest available layer.
 - CI layers derive their test and deploy jobs from capabilities on the bus instead of hardcoding
@@ -52,5 +66,6 @@ First public release.
 - A self-contained wheel that bundles the layers and the registry, so an installed `initree` runs
   from any working directory. MIT licensed, published to PyPI via Trusted Publishing.
 
-[Unreleased]: https://github.com/ibrah5em/initree/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ibrah5em/initree/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/ibrah5em/initree/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/ibrah5em/initree/releases/tag/v0.1.0
