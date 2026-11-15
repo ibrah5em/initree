@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ibrah5em/initree"
+Homepage = "https://ibrah5em.me/articles/initree"
 Repository = "https://github.com/ibrah5em/initree"
 Issues = "https://github.com/ibrah5em/initree/issues"
 
