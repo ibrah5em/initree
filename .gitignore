@@ -5,7 +5,9 @@
 
 # IDEs & Editor Configs
 
-/.vscode/
+/.vscode/*
+!/.vscode/extensions.json
+!/.vscode/settings.json
 
 # Python & uv build artifacts
 __pycache__/
